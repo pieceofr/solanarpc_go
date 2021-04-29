@@ -64,3 +64,15 @@ func TestGetBlockTime(t *testing.T) {
 	_, err := client.GetBlockTime(75704734) // Account exist
 	assert.Error(t, err, "unknown block")
 }
+
+func TestGetClusterNodes(t *testing.T) {
+	fmt.Println("--------GetClusterNodes--------")
+	client := new(RPCClient)
+	client.Init(solanaNode)
+	nodes, err := client.GetClusterNodes() // Account exist
+	for i, v := range nodes {
+		fmt.Println("Node", " ", i, ":")
+		fmt.Println(v)
+	}
+	assert.NoError(t, err, "GetClusterNodes Error")
+}

@@ -201,9 +201,8 @@ func (r *RPCClient) GetAccountInfo(publicKey string, e EncodeMethod) (*AccountIn
 	if rpcResp.ID != id {
 		return nil, ErrIDMismatch
 	}
-	emptyErrorResp := RPCResponseError{}
-	// Check Error return
-	if rpcResp.Error != emptyErrorResp {
+	// check Error Code
+	if rpcResp.Error.Code != 0 {
 		log.WithFields(log.Fields{"func": "GetAccountInfo"}).Error(errors.New(rpcResp.Error.Message))
 		return nil, errors.New(rpcResp.Error.Message)
 	}
@@ -329,6 +328,7 @@ func (r *RPCClient) GetBlockCommitment(block uint64) (*BlockCommitment, error) {
 	}
 
 	commitment := new(BlockCommitment)
+
 	err = json.Unmarshal(rpcResp.Result, commitment)
 	if err != nil {
 		log.WithFields(log.Fields{"func": "GetBlockCommitment"}).Error(err)
@@ -398,4 +398,61 @@ func (r *RPCClient) GetBlockTime(block uint64) (uint64, error) {
 		return 0, err
 	}
 	return timestamp, nil
+}
+
+func (r *RPCClient) GetClusterNodes() ([]ClusterNode, error) {
+	r.DefaultClient()
+
+	query, err := r.HttpRequstURL("")
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetClusterNodes", "reqString": query}).Error(err)
+		return nil, err
+	}
+	// Construct Query Params
+	id := RandomID()
+	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getClusterNodes"}
+
+	jsonParams, err := json.Marshal(rpcReq)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(err)
+		return nil, err
+	}
+
+	req, err := r.SetRPCRequest("POST", query, jsonParams)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(err)
+		return nil, err
+	}
+
+	resp, err := r.Client.Do(req)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(err)
+		return nil, err
+	}
+	defer CloseRespBody(resp)
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(err)
+		return nil, err
+	}
+	rpcResp := new(RPCResponse)
+	err = json.Unmarshal(body, rpcResp)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(err)
+		return nil, err
+
+	}
+
+	if rpcResp.Error.Code != 0 {
+		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(errors.New(rpcResp.Error.Message))
+		return nil, errors.New(rpcResp.Error.Message)
+	}
+	nodes := []ClusterNode{}
+	if err = json.Unmarshal(rpcResp.Result, &nodes); err != nil {
+		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(err)
+		return nil, err
+	}
+
+	return nodes, nil
 }

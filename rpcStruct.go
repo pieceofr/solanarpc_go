@@ -57,3 +57,12 @@ type BlockCommitment struct {
 	Commitment []uint64 `json:"commitment,omitempty"`
 	TotalStake uint64   `json:"totalStake"`
 }
+
+// GetClusterNode struct
+type ClusterNode struct {
+	PubKey  string
+	Gossip  string
+	Tpu     string
+	Rpc     string
+	Version string
+}
