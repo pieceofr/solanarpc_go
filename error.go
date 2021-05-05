@@ -18,6 +18,7 @@ const (
 	timeStampNotAvailable          = "timestamp is not available for this block"
 	processedNotSupported          = "processed not supported"
 	transactionNotFoundOrConfirmed = "transaction not found or confirmed"
+	specifiedBlockNotConfirmed     = " specified block is not confirmed"
 )
 
 var (
@@ -34,6 +35,7 @@ var (
 	ErrTimeStampNotAvailable          error
 	ErrProcessedNotSupported          error
 	ErrTransactionNotFoundOrConfirmed error
+	ErrSpecifiedBlockNotConfirmed     error
 )
 
 func init() {
@@ -50,4 +52,5 @@ func init() {
 	ErrTimeStampNotAvailable = errors.New(timeStampNotAvailable)
 	ErrProcessedNotSupported = errors.New(processedNotSupported)
 	ErrTransactionNotFoundOrConfirmed = errors.New(transactionNotFoundOrConfirmed)
+	ErrSpecifiedBlockNotConfirmed = errors.New(specifiedBlockNotConfirmed)
 }

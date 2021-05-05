@@ -67,6 +67,7 @@ type BlockCommitment struct {
 
 // GetClusterNode struct
 // Naming to ContactInfo for consistency with web3.js
+// string = null if attribute does not exist
 type ContactInfo struct {
 	PubKey  string `json:"pubKey"`
 	Gossip  string `json:"gossip"`
@@ -88,11 +89,11 @@ type ConfirmedBlock struct {
 		PostBalance uint64 `json:"postBalance"`
 		RewardType  string `json:"rewardType"` // "fee", "rent", "voting", "staking"
 	} `json:"rewards"`
-	BlockTime json.RawMessage `json:"blockTime"` //<i64 | null>
+	BlockTime int64 `json:"blockTime"` //<i64 | null>
 }
 
 type ConfirmedBlockTransaction struct {
-	Transaction              interface{} `json:"transaction"` // Transaction Object or [string,encoding] json object
+	Transaction              `json:"transaction"` // Transaction Object or [string,encoding] json object
 	ConfirmedTransactionMeta struct {
 		Err                      error          `json:"err,omitempty"`
 		Fee                      uint64         `json:"fee"`
