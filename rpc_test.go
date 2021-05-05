@@ -61,7 +61,8 @@ func TestGetBlockTime(t *testing.T) {
 	fmt.Println("--------GetBlockTime--------")
 	client := new(RPCClient)
 	client.Init(solanaNode)
-	_, err := client.GetBlockTime(75704734) // Account exist
+
+	_, err := client.GetBlockTime(76033309) // Account exist
 	assert.Error(t, err, "unknown block")
 }
 
@@ -69,10 +70,16 @@ func TestGetClusterNodes(t *testing.T) {
 	fmt.Println("--------GetClusterNodes--------")
 	client := new(RPCClient)
 	client.Init(solanaNode)
-	nodes, err := client.GetClusterNodes() // Account exist
-	for i, v := range nodes {
-		fmt.Println("Node", " ", i, ":")
-		fmt.Println(v)
-	}
+	_, err := client.GetClusterNodes() // Account exist
+
 	assert.NoError(t, err, "GetClusterNodes Error")
+}
+
+func TestGetConfirmBlock(t *testing.T) {
+	fmt.Println("--------TestGetConfirmBlock--------")
+	client := new(RPCClient)
+	client.Init(solanaNode)
+	_, err := client.GetConfirmBlock(76927267, EncodeDefault, "", true, "") // Account exist
+	assert.NoError(t, err, "GetClusterNodes Error")
+
 }

@@ -5,31 +5,35 @@ import (
 )
 
 const (
-	invalidHost           = "invalid host"
-	emptyHost             = "empty host"
-	notSupportedProtocol  = "not a supported protocol"
-	accountNotExist       = "account not exist"
-	idNotMatch            = "id not match"
-	notJsonType           = "not a Json type"
-	noContentType         = "no content type"
-	jsonParseError        = "json parse error"
-	idMismatch            = "id mismatch"
-	unKnownBlock          = "unknow block"
-	timeStampNotAvailable = "timestamp is not available for this block"
+	invalidHost                    = "invalid host"
+	emptyHost                      = "empty host"
+	notSupportedProtocol           = "not a supported protocol"
+	accountNotExist                = "account not exist"
+	idNotMatch                     = "id not match"
+	notJsonType                    = "not a Json type"
+	noContentType                  = "no content type"
+	jsonParseError                 = "json parse error"
+	idMismatch                     = "id mismatch"
+	unKnownBlock                   = "unknow block"
+	timeStampNotAvailable          = "timestamp is not available for this block"
+	processedNotSupported          = "processed not supported"
+	transactionNotFoundOrConfirmed = "transaction not found or confirmed"
 )
 
 var (
-	ErrInvalidHost           error
-	ErrEmptyHost             error
-	ErrNotSupportProtocol    error
-	ErrAccountNotExist       error
-	ErrIDNotMatch            error
-	ErrNotJSONType           error
-	ErrNOContentType         error
-	ErrJSONParseError        error
-	ErrIDMismatch            error
-	ErrUnknownBlock          error
-	ErrTimeStampNotAvailable error
+	ErrInvalidHost                    error
+	ErrEmptyHost                      error
+	ErrNotSupportProtocol             error
+	ErrAccountNotExist                error
+	ErrIDNotMatch                     error
+	ErrNotJSONType                    error
+	ErrNOContentType                  error
+	ErrJSONParseError                 error
+	ErrIDMismatch                     error
+	ErrUnknownBlock                   error
+	ErrTimeStampNotAvailable          error
+	ErrProcessedNotSupported          error
+	ErrTransactionNotFoundOrConfirmed error
 )
 
 func init() {
@@ -44,4 +48,6 @@ func init() {
 	ErrIDMismatch = errors.New(idMismatch)
 	ErrUnknownBlock = errors.New(unKnownBlock)
 	ErrTimeStampNotAvailable = errors.New(timeStampNotAvailable)
+	ErrProcessedNotSupported = errors.New(processedNotSupported)
+	ErrTransactionNotFoundOrConfirmed = errors.New(transactionNotFoundOrConfirmed)
 }

@@ -58,11 +58,80 @@ type BlockCommitment struct {
 	TotalStake uint64   `json:"totalStake"`
 }
 
+/*
+	Commitment : "processed" | "confirmed" | "finalized"
+	'processed': Query the most recent block which has reached 1 confirmation by the connected node
+	'confirmed': Query the most recent block which has reached 1 confirmation by the cluster
+	'finalized': Query the most recent block which has been finalized by the cluster
+*/
+
 // GetClusterNode struct
-type ClusterNode struct {
-	PubKey  string
-	Gossip  string
-	Tpu     string
-	Rpc     string
-	Version string
+// Naming to ContactInfo for consistency with web3.js
+type ContactInfo struct {
+	PubKey  string `json:"pubKey"`
+	Gossip  string `json:"gossip"`
+	Tpu     string `json:"tpu"`
+	Rpc     string `json:"rpc"`
+	Version string `json:"version"`
+}
+
+// GetConfirmedBlock
+type ConfirmedBlock struct {
+	Blockhash         string                      `json:"blockhash"`
+	PreviousBlockhash string                      `json:"previousBlockhash"`
+	ParentSlot        uint64                      `json:"parentSlot"`
+	Transactions      []ConfirmedBlockTransaction `json:"transactions"`
+	Signatures        string                      `json:"signatures"`
+	Rewards           struct {
+		Pubkey      string `json:"pubkey"`
+		Lamports    int64  `json:"lamports"`
+		PostBalance uint64 `json:"postBalance"`
+		RewardType  string `json:"rewardType"` // "fee", "rent", "voting", "staking"
+	} `json:"rewards"`
+	BlockTime json.RawMessage `json:"blockTime"` //<i64 | null>
+}
+
+type ConfirmedBlockTransaction struct {
+	Transaction              interface{} `json:"transaction"` // Transaction Object or [string,encoding] json object
+	ConfirmedTransactionMeta struct {
+		Err                      error          `json:"err,omitempty"`
+		Fee                      uint64         `json:"fee"`
+		PreBalances              []TokenBalance `json:"PreBalances,omitempty"`
+		PostBalances             []TokenBalance `json:"postBalances,omitempty"`
+		CompiledInnerInstruction `json:"innerInstructions,omitempty"`
+		LogMessages              []string `json:"logMessages"`
+	}
+}
+
+type Transaction struct {
+	Signatures []string `json:"signatures"`
+	Message    struct {
+		AccountKeys []string `json:"accountKeys"`
+		Header      struct {
+			NumRequiredSignatures       uint64 `json:"numRequiredSignatures"`
+			NumReadonlySignedAccounts   uint64 `json:"numReadonlySignedAccounts"`
+			NumReadonlyUnsignedAccounts uint64 `json:"numReadonlyUnsignedAccounts"`
+		} `json:"header"`
+	} `json:"message"`
+}
+
+type CompiledInnerInstruction struct {
+	Index        uint64                `json:"index"`
+	Instructions []CompiledInstruction `json:"instructions"`
+}
+
+type CompiledInstruction struct {
+	ProgramIdIndex uint64   `json:"programIdIndex"`
+	Accounts       []uint64 `json:"accounts"`
+	Data           string   `json:"data"`
+}
+
+type TokenBalance struct {
+	AccountIndex  uint64 `json:"accountIndex"`
+	Mint          string `json:"mint"`
+	UITokenAmount struct {
+		Amount         string `json:"amount"`
+		Decimals       uint64 `json:"decimals"`
+		UiAmountString string `json:"uiAmountString"`
+	} `josn:"uiTokenAmount"`
 }

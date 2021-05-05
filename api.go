@@ -26,12 +26,24 @@ const (
 )
 
 type EncodeMethod string
+type TransactionDetails string
+type Commitment string
 
 const (
-	Base58     EncodeMethod = "base58"
-	Base64     EncodeMethod = "base64"
-	Base64Zstd EncodeMethod = "base64+zstd"
-	JsonParsed EncodeMethod = "jsonParsed"
+	Base58                    EncodeMethod       = "base58"
+	Base64                    EncodeMethod       = "base64"
+	Base64Zstd                EncodeMethod       = "base64+zstd"
+	JsonParsed                EncodeMethod       = "jsonParsed"
+	EncodeDefault             EncodeMethod       = JsonParsed
+	Full                      TransactionDetails = "full"
+	Signatures                TransactionDetails = "signatures"
+	None                      TransactionDetails = "none"
+	TransactionDetailsDefault TransactionDetails = Full
+	RewardsDefault            bool               = true
+	Finalized                 Commitment         = "finalized"
+	Confirmed                 Commitment         = "confirmed"
+	Processed                 Commitment         = "processed"
+	CommitmentDefault         Commitment         = Finalized
 )
 
 type Endpoint interface {
@@ -134,7 +146,6 @@ func (r *RPCClient) CheckHealth() bool {
 		log.WithFields(log.Fields{"func": "CheckHealth"}).Error(err)
 		return false
 	}
-
 	defer CloseRespBody(resp)
 
 	if cont, err := ioutil.ReadAll(resp.Body); err == nil {
@@ -180,7 +191,7 @@ func (r *RPCClient) GetAccountInfo(publicKey string, e EncodeMethod) (*AccountIn
 
 	resp, err := r.Client.Do(req)
 	if err != nil {
-		log.WithFields(log.Fields{"func": "CheckHealth"}).Error(err)
+		log.WithFields(log.Fields{"func": "GetAccountInfo"}).Error(err)
 		return nil, err
 	}
 	defer CloseRespBody(resp)
@@ -209,7 +220,7 @@ func (r *RPCClient) GetAccountInfo(publicKey string, e EncodeMethod) (*AccountIn
 
 	result := new(RPCResult)
 	json.Unmarshal(rpcResp.Result, result)
-	if string(result.Value) == "null" {
+	if strings.EqualFold(string(result.Value), "null") {
 		return nil, ErrAccountNotExist
 	}
 	value := new(AccountInfoValue)
@@ -388,7 +399,7 @@ func (r *RPCClient) GetBlockTime(block uint64) (uint64, error) {
 		log.WithFields(log.Fields{"func": "GetBlockTime"}).Error(rpcResp.Error.Message)
 		return 0, errors.New(rpcResp.Error.Message)
 	}
-	if string(rpcResp.Result) == "null" {
+	if strings.EqualFold(string(rpcResp.Result), "null") {
 		log.WithFields(log.Fields{"func": "GetBlockTime"}).Error(ErrTimeStampNotAvailable)
 		return 0, ErrTimeStampNotAvailable
 	}
@@ -400,7 +411,7 @@ func (r *RPCClient) GetBlockTime(block uint64) (uint64, error) {
 	return timestamp, nil
 }
 
-func (r *RPCClient) GetClusterNodes() ([]ClusterNode, error) {
+func (r *RPCClient) GetClusterNodes() ([]ContactInfo, error) {
 	r.DefaultClient()
 
 	query, err := r.HttpRequstURL("")
@@ -448,11 +459,94 @@ func (r *RPCClient) GetClusterNodes() ([]ClusterNode, error) {
 		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(errors.New(rpcResp.Error.Message))
 		return nil, errors.New(rpcResp.Error.Message)
 	}
-	nodes := []ClusterNode{}
+	nodes := []ContactInfo{}
 	if err = json.Unmarshal(rpcResp.Result, &nodes); err != nil {
 		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(err)
 		return nil, err
 	}
 
 	return nodes, nil
+}
+
+func (r *RPCClient) GetConfirmBlock(slot uint64, eMethod EncodeMethod, tDetail TransactionDetails, rewards bool, commitment Commitment) (*ConfirmedBlock, error) {
+	query, err := r.HttpRequstURL("")
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetConfirmBlock", "reqString": query}).Error(err)
+		return nil, err
+	}
+	// Construct Query Params
+	id := RandomID()
+	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getConfirmedBlock"}
+	type Obj struct {
+		Encoding           string `json:"encoding,omitempty"`
+		TransactionDetails string `json:"transactionDetails,omitempty"`
+		Rewards            bool   `json:"rewards,omitempty"`
+		Commitment         string `json:"commitment,omitempty"`
+	}
+
+	options := Obj{}
+	if eMethod != EncodeDefault && len(eMethod) != 0 {
+		options.Encoding = string(eMethod)
+	}
+	if tDetail != TransactionDetailsDefault && len(tDetail) != 0 {
+		options.TransactionDetails = string(tDetail)
+	}
+
+	options.Rewards = rewards
+
+	if commitment == Processed {
+		return nil, ErrProcessedNotSupported
+	}
+
+	if len(commitment) != 0 && commitment != CommitmentDefault {
+		options.Commitment = string(commitment)
+	}
+	rpcReq.Params = append(rpcReq.Params, slot, options)
+	jsonParams, err := json.Marshal(rpcReq)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Error(err)
+		return nil, err
+	}
+	req, err := r.SetRPCRequest("POST", query, jsonParams)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Error(err)
+		return nil, err
+	}
+	resp, err := r.Client.Do(req)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Error(err)
+		return nil, err
+	}
+	defer CloseRespBody(resp)
+
+	rpcResp := new(RPCResponse)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Error(err)
+		return nil, err
+	}
+	// log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Debug(string(body))
+	err = json.Unmarshal(body, rpcResp)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Error(err)
+		return nil, err
+	}
+	// Check ID mismatch
+	if rpcResp.ID != id {
+		return nil, ErrIDMismatch
+	}
+	// check Error Code
+	if rpcResp.Error.Code != 0 {
+		log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Error(errors.New(rpcResp.Error.Message))
+		return nil, errors.New(rpcResp.Error.Message)
+	}
+	if strings.EqualFold(string(rpcResp.Result), "null") {
+		return nil, ErrTransactionNotFoundOrConfirmed
+	}
+
+	block := new(ConfirmedBlock)
+	json.Unmarshal(rpcResp.Result, block)
+
+	return block, nil
+
 }
