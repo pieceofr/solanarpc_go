@@ -3,7 +3,6 @@ package solanarpc
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -26,23 +25,23 @@ const (
 
 type EncodeMethod string
 type TransactionDetails string
-type Commitment string
+type CommitmentVal string
 
 const (
 	Base58                    EncodeMethod       = "base58"
 	Base64                    EncodeMethod       = "base64"
 	Base64Zstd                EncodeMethod       = "base64+zstd"
 	JsonParsed                EncodeMethod       = "jsonParsed"
-	EncodeDefault             EncodeMethod       = JsonParsed
+	EncodeDefault             EncodeMethod       = "jsonParsed"
 	Full                      TransactionDetails = "full"
 	Signatures                TransactionDetails = "signatures"
 	None                      TransactionDetails = "none"
-	TransactionDetailsDefault TransactionDetails = Full
+	TransactionDetailsDefault TransactionDetails = "Full"
 	RewardsDefault            bool               = true
-	Finalized                 Commitment         = "finalized"
-	Confirmed                 Commitment         = "confirmed"
-	Processed                 Commitment         = "processed"
-	CommitmentDefault         Commitment         = Finalized
+	Finalized                 CommitmentVal      = "finalized"
+	Confirmed                 CommitmentVal      = "confirmed"
+	Processed                 CommitmentVal      = "processed"
+	CommitmentDefault         CommitmentVal      = "Finalized"
 )
 
 type Endpoint interface {
@@ -124,6 +123,49 @@ func (r *RPCClient) SetRPCRequest(httpMethod, query string, request []byte) (req
 	return req, nil
 }
 
+func (r *RPCClient) DoPostRequest(rpcReq RPCRequest) (*RPCResponse, error) {
+	r.DefaultClient()
+
+	query, err := r.HttpRequstURL("")
+	if err != nil {
+		log.WithFields(log.Fields{"func": "DoPostRequest", "reqString": query}).Error(err)
+		return nil, err
+	}
+
+	jsonParams, err := json.Marshal(rpcReq)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "DoPostRequest"}).Error(err)
+		return nil, err
+	}
+	log.WithFields(log.Fields{"func": "DoPostRequest"}).Debug(string(jsonParams))
+	req, err := r.SetRPCRequest("POST", query, jsonParams)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "DoPostRequest"}).Error(err)
+		return nil, err
+	}
+
+	resp, err := r.Client.Do(req)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "DoPostRequest"}).Error(err)
+		return nil, err
+	}
+	defer CloseRespBody(resp)
+
+	rpcResp := new(RPCResponse)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "DoPostRequest"}).Error(err)
+		return nil, err
+	}
+	// log.WithFields(log.Fields{"func": "DoPostRequest"}).Debug(string(body))
+	err = json.Unmarshal(body, rpcResp)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "DoPostRequest"}).Error(err)
+		return nil, err
+	}
+	return rpcResp, nil
+}
+
 func (r *RPCClient) CheckHealth() bool {
 	r.DefaultClient()
 
@@ -158,259 +200,97 @@ func (r *RPCClient) CheckHealth() bool {
 	return false
 }
 
-func (r *RPCClient) GetAccountInfo(publicKey string, e EncodeMethod) (*RPCResponse, error) {
-	r.DefaultClient()
+func (r *RPCClient) GetAccountInfo(publicKey string, extra *AccountInfoExtraParams) (*RPCResponse, error) {
 
-	query, err := r.HttpRequstURL("")
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetAccountInfo", "reqString": query}).Error(err)
-		return nil, err
+	if len(publicKey) == 0 {
+		return nil, ErrInvalidFuncParameter
 	}
 	// Construct Query Params
 	id := RandomID()
 	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getAccountInfo"}
-
-	type Encode struct {
-		Encoding string `json:"encoding"`
+	rpcReq.Params = append(rpcReq.Params, publicKey)
+	if extra != nil {
+		rpcReq.Params = append(rpcReq.Params, extra)
 	}
 
-	encode := string(e)
-	rpcReq.Params = append(rpcReq.Params, publicKey, Encode{Encoding: encode})
-	jsonParams, err := json.Marshal(rpcReq)
+	resp, err := r.DoPostRequest(rpcReq)
 	if err != nil {
 		log.WithFields(log.Fields{"func": "GetAccountInfo"}).Error(err)
 		return nil, err
 	}
-
-	req, err := r.SetRPCRequest("POST", query, jsonParams)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetAccountInfo"}).Error(err)
-		return nil, err
-	}
-
-	resp, err := r.Client.Do(req)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetAccountInfo"}).Error(err)
-		return nil, err
-	}
-	defer CloseRespBody(resp)
-
-	rpcResp := new(RPCResponse)
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetAccountInfo"}).Error(err)
-		return nil, err
-	}
-	log.WithFields(log.Fields{"func": "GetAccountInfo"}).Debug(string(body))
-	err = json.Unmarshal(body, rpcResp)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetAccountInfo"}).Error(err)
-		return nil, err
-	}
-	// Check ID mismatch
-	if rpcResp.ID != id {
+	if resp.ID != id {
 		return nil, ErrIDMismatch
 	}
-	return rpcResp, nil
+	return resp, nil
 }
 
 func (r *RPCClient) GetBalance(publicKey string) (*RPCResponse, error) {
-	r.DefaultClient()
-	query, err := r.HttpRequstURL("")
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBalance", "reqString": query}).Error(err)
-		return nil, err
+	if len(publicKey) == 0 {
+		return nil, ErrInvalidFuncParameter
 	}
 	// Construct Query Params
 	id := RandomID()
 	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getBalance"}
 	rpcReq.Params = append(rpcReq.Params, publicKey)
-	jsonReq, err := json.Marshal(rpcReq)
+	resp, err := r.DoPostRequest(rpcReq)
 	if err != nil {
 		log.WithFields(log.Fields{"func": "GetBalance"}).Error(err)
 		return nil, err
 	}
-
-	req, err := r.SetRPCRequest("POST", query, jsonReq)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBalance"}).Error(err)
-		return nil, err
+	if resp.ID != id {
+		return nil, ErrIDMismatch
 	}
-
-	resp, err := r.Client.Do(req)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBalance"}).Error(err)
-		return nil, err
-	}
-	defer CloseRespBody(resp)
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBalance"}).Error(err)
-		return nil, err
-	}
-
-	rpcResp := new(RPCResponse)
-	err = json.Unmarshal(body, rpcResp)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBalance"}).Error(err)
-		return nil, err
-	}
-	return rpcResp, nil
+	return resp, nil
 }
 
 func (r *RPCClient) GetBlockCommitment(block uint64) (*RPCResponse, error) {
-	r.DefaultClient()
-	// Composit query string
-	query, err := r.HttpRequstURL("")
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockCommitment", "reqString": query}).Error(err)
-		return nil, err
-	}
-
 	// Construct Query Params
 	id := RandomID()
 	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getBlockCommitment"}
 	rpcReq.Params = append(rpcReq.Params, block)
-	jsonReq, err := json.Marshal(rpcReq)
+	resp, err := r.DoPostRequest(rpcReq)
 	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockCommitment"}).Error(err)
+		log.WithFields(log.Fields{"func": "GetBalance"}).Error(err)
 		return nil, err
 	}
-
-	req, err := r.SetRPCRequest("POST", query, jsonReq)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockCommitment"}).Error(err)
-		return nil, err
+	if resp.ID != id {
+		return nil, ErrIDMismatch
 	}
-
-	resp, err := r.Client.Do(req)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockCommitment"}).Error(err)
-		return nil, err
-	}
-	defer CloseRespBody(resp)
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockCommitment"}).Error(err)
-		return nil, err
-	}
-
-	rpcResp := new(RPCResponse)
-	err = json.Unmarshal(body, rpcResp)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockCommitment"}).Error(err)
-		return nil, err
-	}
-	return rpcResp, nil
+	return resp, nil
 }
 
 func (r *RPCClient) GetBlockTime(block uint64) (*RPCResponse, error) {
-	r.DefaultClient()
-	// Composit query string
-	query, err := r.HttpRequstURL("")
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockTime", "reqString": query}).Error(err)
-		return nil, err
-	}
-
 	// Construct Query Params
 	id := RandomID()
 	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getBlockTime"}
 	rpcReq.Params = append(rpcReq.Params, block)
-	jsonReq, err := json.Marshal(rpcReq)
+	resp, err := r.DoPostRequest(rpcReq)
 	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockTime"}).Error(err)
+		log.WithFields(log.Fields{"func": "GetBalance"}).Error(err)
 		return nil, err
 	}
-
-	req, err := r.SetRPCRequest("POST", query, jsonReq)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockTime"}).Error(err)
-		return nil, err
+	if resp.ID != id {
+		return nil, ErrIDMismatch
 	}
-
-	resp, err := r.Client.Do(req)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockTime"}).Error(err)
-		return nil, err
-	}
-	defer CloseRespBody(resp)
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockTime"}).Error(err)
-		return nil, err
-	}
-
-	rpcResp := new(RPCResponse)
-	err = json.Unmarshal(body, rpcResp)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockTime"}).Error(err)
-		return nil, err
-	}
-	if rpcResp.Error.Code != 0 {
-		log.WithFields(log.Fields{"func": "GetBlockTime"}).Error(rpcResp.Error.Message)
-		return nil, errors.New(rpcResp.Error.Message)
-	}
-
-	return rpcResp, nil
+	return resp, nil
 }
 
 func (r *RPCClient) GetClusterNodes() (*RPCResponse, error) {
-	r.DefaultClient()
-
-	query, err := r.HttpRequstURL("")
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetClusterNodes", "reqString": query}).Error(err)
-		return nil, err
-	}
 	// Construct Query Params
 	id := RandomID()
 	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getClusterNodes"}
-
-	jsonParams, err := json.Marshal(rpcReq)
+	resp, err := r.DoPostRequest(rpcReq)
 	if err != nil {
 		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(err)
 		return nil, err
 	}
-
-	req, err := r.SetRPCRequest("POST", query, jsonParams)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(err)
-		return nil, err
+	if resp.ID != id {
+		return nil, ErrIDMismatch
 	}
-
-	resp, err := r.Client.Do(req)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(err)
-		return nil, err
-	}
-	defer CloseRespBody(resp)
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(err)
-		return nil, err
-	}
-	rpcResp := new(RPCResponse)
-	err = json.Unmarshal(body, rpcResp)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(err)
-		return nil, err
-
-	}
-	return rpcResp, nil
+	return resp, nil
 }
 
 func (r *RPCClient) GetConfirmedBlock(params *ConfirmedBlockParam) (*RPCResponse, error) {
-	query, err := r.HttpRequstURL("")
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetConfirmBlock", "reqString": query}).Error(err)
-		return nil, err
-	}
-
 	// Construct Query Params
 	id := RandomID()
 	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getConfirmedBlock"}
@@ -420,102 +300,38 @@ func (r *RPCClient) GetConfirmedBlock(params *ConfirmedBlockParam) (*RPCResponse
 	if params.ConfirmedBlockParamObj != emptyParamObj {
 		rpcReq.Params = append(rpcReq.Params, params.ConfirmedBlockParamObj)
 	}
-
-	jsonParams, err := json.Marshal(rpcReq)
+	resp, err := r.DoPostRequest(rpcReq)
 	if err != nil {
-		log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Error(err)
+		log.WithFields(log.Fields{"func": "GetConfirmedBlock"}).Error(err)
 		return nil, err
 	}
-	req, err := r.SetRPCRequest("POST", query, jsonParams)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Error(err)
-		return nil, err
-	}
-	resp, err := r.Client.Do(req)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Error(err)
-		return nil, err
-	}
-	defer CloseRespBody(resp)
-
-	rpcResp := new(RPCResponse)
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Error(err)
-		return nil, err
-	}
-	//log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Debug(string(body))
-	err = json.Unmarshal(body, rpcResp)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Error(err)
-		return nil, err
-	}
-	// Check ID mismatch
-	if rpcResp.ID != id {
+	if resp.ID != id {
 		return nil, ErrIDMismatch
 	}
-	return rpcResp, nil
+	return resp, nil
 }
 
 // GetBlockProduction --- > Method not found --- Deprecate !?
 // set params = nil  for default settings
 func (r *RPCClient) GetBlockProduction(params *BlockProductionQueryParam) (*RPCResponse, error) {
-	r.DefaultClient()
-
-	query, err := r.HttpRequstURL("")
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockProduction", "reqString": query}).Error(err)
-		return nil, err
-	}
-	// Construct Query Params
 	id := RandomID()
 	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getBlockProduction"}
 	if params != nil {
 		rpcReq.Params = append(rpcReq.Params, *params)
 	}
-	log.WithFields(log.Fields{"func": "GetBlockProduction"}).Debug(rpcReq)
-	jsonParams, err := json.Marshal(rpcReq)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockProduction"}).Error(err)
-		return nil, err
-	}
 
-	req, err := r.SetRPCRequest("POST", query, jsonParams)
+	resp, err := r.DoPostRequest(rpcReq)
 	if err != nil {
 		log.WithFields(log.Fields{"func": "GetBlockProduction"}).Error(err)
 		return nil, err
 	}
-
-	resp, err := r.Client.Do(req)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockProduction"}).Error(err)
-		return nil, err
+	if resp.ID != id {
+		return nil, ErrIDMismatch
 	}
-	defer CloseRespBody(resp)
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockProduction"}).Error(err)
-		return nil, err
-	}
-	rpcResp := new(RPCResponse)
-	err = json.Unmarshal(body, rpcResp)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetBlockProduction"}).Error(err)
-		return nil, err
-
-	}
-	return rpcResp, nil
+	return resp, nil
 }
 
 func (r *RPCClient) GetConfirmedBlocks(params *ConfirmedBlocksParam) (*RPCResponse, error) {
-	r.DefaultClient()
-	query, err := r.HttpRequstURL("")
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetConfirmedBlocks", "reqString": query}).Error(err)
-		return nil, err
-	}
-	// Construct Query Params
 	id := RandomID()
 	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getConfirmedBlocks"}
 
@@ -527,43 +343,38 @@ func (r *RPCClient) GetConfirmedBlocks(params *ConfirmedBlocksParam) (*RPCRespon
 	if params.EndSlot > params.StartSlot {
 		rpcReq.Params = append(rpcReq.Params, params.EndSlot)
 	}
-	if len(params.Commitment) > 0 {
-		rpcReq.Params = append(rpcReq.Params, params.Commitment)
+	if len(params.CommitmentConfig.Commitment) > 0 {
+		rpcReq.Params = append(rpcReq.Params, params.CommitmentConfig)
 	}
-
-	log.WithFields(log.Fields{"func": "GetConfirmedBlocks"}).Debug(rpcReq)
-
-	jsonParams, err := json.Marshal(rpcReq)
+	resp, err := r.DoPostRequest(rpcReq)
 	if err != nil {
 		log.WithFields(log.Fields{"func": "GetConfirmedBlocks"}).Error(err)
 		return nil, err
 	}
+	if resp.ID != id {
+		return nil, ErrIDMismatch
+	}
+	return resp, nil
+}
 
-	req, err := r.SetRPCRequest("POST", query, jsonParams)
+func (r *RPCClient) GetConfirmedBlocksWithLimit(params *ConfirmedBlocksWithLimitParam) (*RPCResponse, error) {
+	id := RandomID()
+	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getConfirmedBlocksWithLimit"}
+
+	if params == nil {
+		return nil, ErrConfirmedBlocksParamCanNotBeNil
+	}
+	rpcReq.Params = append(rpcReq.Params, params.StartSlot, params.Limit)
+	if len(params.CommitmentConfig.Commitment) > 0 {
+		rpcReq.Params = append(rpcReq.Params, params.CommitmentConfig)
+	}
+	resp, err := r.DoPostRequest(rpcReq)
 	if err != nil {
 		log.WithFields(log.Fields{"func": "GetConfirmedBlocks"}).Error(err)
 		return nil, err
 	}
-
-	resp, err := r.Client.Do(req)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetConfirmedBlocks"}).Error(err)
-		return nil, err
+	if resp.ID != id {
+		return nil, ErrIDMismatch
 	}
-	defer CloseRespBody(resp)
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetConfirmedBlocks"}).Error(err)
-		return nil, err
-	}
-	rpcResp := new(RPCResponse)
-	err = json.Unmarshal(body, rpcResp)
-	if err != nil {
-		log.WithFields(log.Fields{"func": "GetConfirmedBlocks"}).Error(err)
-		return nil, err
-
-	}
-	return rpcResp, nil
-
+	return resp, nil
 }

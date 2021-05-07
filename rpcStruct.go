@@ -33,10 +33,15 @@ type RPCResult struct {
 	Value json.RawMessage `json:"value,omitempty"`
 }
 
+// This struct is for sending commitment as an object
+type CommitmentConfig struct {
+	Commitment CommitmentVal `json:"commitment,omitempty"`
+}
+
 // GetAccountInfo struct
 type AccountInfoExtraParams struct {
-	Commitment string `json:"commitment,omitempty"`
-	Encoding   string `json:"encoding"`
+	Commitment CommitmentVal `json:"commitment,omitempty"`
+	Encoding   string        `json:"encoding"`
 	DataSlice  struct {
 		Offset uint64 `json:"offset"`
 		Length uint64 `json:"length"`
@@ -84,10 +89,10 @@ type ConfirmedBlockParam struct {
 }
 
 type ConfirmedBlockParamObj struct {
-	Encoding           string `json:"encoding,omitempty"`
-	TransactionDetails string `json:"transactionDetails,omitempty"`
-	Rewards            bool   `json:"rewards,omitempty"`
-	Commitment         string `json:"commitment,omitempty"`
+	Encoding           string        `json:"encoding,omitempty"`
+	TransactionDetails string        `json:"transactionDetails,omitempty"`
+	Rewards            bool          `json:"rewards,omitempty"`
+	Commitment         CommitmentVal `json:"commitment,omitempty"`
 }
 
 type ConfirmedBlock struct {
@@ -153,7 +158,7 @@ type TokenBalance struct {
 
 // GetBlockProduction
 type BlockProductionQueryParam struct {
-	Commitment string `json:"commitment,omitempty"`
+	Commitment CommitmentVal `json:"commitment,omitempty"`
 	Range      struct {
 		FirstSlot uint64 `json:"firstSlot"`
 		LastSlot  uint64 `json:"lastSlot,omitempty"`
@@ -163,7 +168,14 @@ type BlockProductionQueryParam struct {
 
 // GetConfirmedBlocks
 type ConfirmedBlocksParam struct {
-	StartSlot  uint64 `json:"start_slot"`
-	EndSlot    uint64 `json:"end_slot,omitempty"`
-	Commitment string `json:"commitment,omitempty"`
+	StartSlot        uint64 `json:"start_slot"`
+	EndSlot          uint64 `json:"end_slot,omitempty"`
+	CommitmentConfig `json:"commitment,omitempty"`
+}
+
+// GetConfirmedBlocksLimit
+type ConfirmedBlocksWithLimitParam struct {
+	StartSlot        uint64 `json:"start_slot"`
+	Limit            uint64 `json:"limit"`
+	CommitmentConfig `json:"commitment,omitempty"`
 }

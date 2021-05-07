@@ -6,6 +6,7 @@ import (
 
 const (
 	invalidHost                     = "invalid host"
+	invalidFuncParameter            = "invalid function parameter"
 	emptyHost                       = "empty host"
 	notSupportedProtocol            = "not a supported protocol"
 	accountNotExist                 = "account not exist"
@@ -24,6 +25,7 @@ const (
 
 var (
 	ErrInvalidHost                     error
+	ErrInvalidFuncParameter            error
 	ErrEmptyHost                       error
 	ErrNotSupportProtocol              error
 	ErrAccountNotExist                 error
@@ -41,6 +43,7 @@ var (
 
 func init() {
 	ErrInvalidHost = errors.New(invalidHost)
+	ErrInvalidFuncParameter = errors.New(invalidFuncParameter)
 	ErrEmptyHost = errors.New(emptyHost)
 	ErrNotSupportProtocol = errors.New(notSupportedProtocol)
 	ErrAccountNotExist = errors.New(accountNotExist)

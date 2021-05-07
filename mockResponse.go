@@ -279,3 +279,13 @@ var testResultConfirmedBlocks03 string = `{
     },
     "id": 1
 }`
+
+var testResultConfirmedBlockWithLimit01 string = `{
+    "jsonrpc": "2.0",
+    "result": [
+        77118633,
+        77118634,
+        77118635
+    ],
+    "id": 1
+}`

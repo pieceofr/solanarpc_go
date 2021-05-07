@@ -48,7 +48,7 @@ func ParseBalanceResponse(resp *RPCResponse) (uint64, error) {
 	return u, nil
 }
 
-func ParseBlockCommitment(resp *RPCResponse) (*BlockCommitment, error) {
+func ParseBlockCommitmentResponse(resp *RPCResponse) (*BlockCommitment, error) {
 	if resp.Error.Code != 0 {
 		return nil, errors.New(resp.Error.Message)
 	}
@@ -58,14 +58,10 @@ func ParseBlockCommitment(resp *RPCResponse) (*BlockCommitment, error) {
 		log.WithFields(log.Fields{"func": "ParseBlockCommitment"}).Error(err)
 		return nil, err
 	}
-	if len(commitment.Commitment) == 0 {
-		log.WithFields(log.Fields{"func": "ParseBlockCommitment"}).Error(ErrUnknownBlock)
-		return nil, ErrUnknownBlock
-	}
 	return commitment, nil
 }
 
-func ParseBlockTime(resp *RPCResponse) (uint64, error) {
+func ParseBlockTimeResponse(resp *RPCResponse) (uint64, error) {
 	if strings.EqualFold(string(resp.Result), "null") {
 		log.WithFields(log.Fields{"func": "ParseBlockTime"}).Error(ErrTimeStampNotAvailable)
 		return 0, ErrTimeStampNotAvailable
@@ -78,7 +74,7 @@ func ParseBlockTime(resp *RPCResponse) (uint64, error) {
 	return timestamp, nil
 }
 
-func ParseClusterNodes(resp *RPCResponse) ([]ContactInfo, error) {
+func ParseClusterNodesResponse(resp *RPCResponse) ([]ContactInfo, error) {
 	if resp.Error.Code != 0 {
 		log.WithFields(log.Fields{"func": "ParseClusterNodes"}).Error(errors.New(resp.Error.Message))
 		return nil, errors.New(resp.Error.Message)
@@ -95,7 +91,7 @@ func ParseClusterNodes(resp *RPCResponse) ([]ContactInfo, error) {
 	return nodes, nil
 }
 
-func ParseConfirmedBlock(resp *RPCResponse) (*ConfirmedBlock, error) {
+func ParseConfirmedBlockResponse(resp *RPCResponse) (*ConfirmedBlock, error) {
 	// check Error Code
 	if resp.Error.Code != 0 {
 		log.WithFields(log.Fields{"func": "ParseConfirmedBlock"}).Error(errors.New(resp.Error.Message))
@@ -106,6 +102,7 @@ func ParseConfirmedBlock(resp *RPCResponse) (*ConfirmedBlock, error) {
 	}
 
 	block := new(ConfirmedBlock)
+
 	json.Unmarshal(resp.Result, block)
 
 	return block, nil
@@ -117,7 +114,17 @@ func ParseConfirmedBlocks(resp *RPCResponse) ([]uint64, error) {
 		log.WithFields(log.Fields{"func": "ParseConfirmedBlocks"}).Error(errors.New(resp.Error.Message))
 		return nil, errors.New(resp.Error.Message)
 	}
+	blocks := []uint64{}
+	json.Unmarshal(resp.Result, &blocks)
+	return blocks, nil
+}
 
+func ParseConfimedBlocksLimit(resp *RPCResponse) ([]uint64, error) {
+	// check Error Code
+	if resp.Error.Code != 0 {
+		log.WithFields(log.Fields{"func": "ParseConfimedBlocksLimit"}).Error(errors.New(resp.Error.Message))
+		return nil, errors.New(resp.Error.Message)
+	}
 	blocks := []uint64{}
 	json.Unmarshal(resp.Result, &blocks)
 	return blocks, nil
