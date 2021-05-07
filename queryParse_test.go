@@ -175,6 +175,7 @@ func (s *RPCResultTestSuite) SetupTest() {
 	// TestParaseConfirmedBlocksLimit
 	resp = new(RPCResponse)
 	err = json.Unmarshal([]byte(testResultConfirmedBlockWithLimit01), resp)
+	assert.NoError(s.T(), err, "prepare mock data fail")
 	s.ConfirmedBlocksLimitResponse01 = resp
 	s.ConfirmedBlocksLimitResult01Len = 3
 
