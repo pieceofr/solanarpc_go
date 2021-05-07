@@ -400,3 +400,26 @@ func (r *RPCClient) GetConfirmedSignaturesForAddress2(base58Sig string, extra *C
 	}
 	return resp, nil
 }
+
+func (r *RPCClient) GetTokenSupply(base58Pubkey string, commitment *CommitmentConfig) (*RPCResponse, error) {
+	id := RandomID()
+	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getTokenSupply"}
+
+	if len(base58Pubkey) == 0 {
+		return nil, ErrInvalidFuncParameter
+	}
+	rpcReq.Params = append(rpcReq.Params, base58Pubkey)
+
+	if commitment != nil && len(commitment.Commitment) > 0 {
+		rpcReq.Params = append(rpcReq.Params, *commitment)
+	}
+	resp, err := r.DoPostRequest(rpcReq)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetConfirmedSignaturesForAddress2"}).Error(err)
+		return nil, err
+	}
+	if resp.ID != id {
+		return nil, ErrIDMismatch
+	}
+	return resp, nil
+}

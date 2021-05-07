@@ -198,3 +198,9 @@ type ConfirmedSignaturesForAddress2 struct {
 	Memo               string `json:"memo,omitempty"`
 	BlockTime          int64  `json:"blockTime,omitempty"`
 }
+
+type TokenSupplyValue struct {
+	Amount         string `json:"amount"`
+	Decimals       uint8  `json:"decimals"`
+	UiAmountString string `json:"uiAmountString"`
+}

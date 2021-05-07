@@ -50,7 +50,6 @@ type RPCResultTestSuite struct {
 	ConfirmedBlockResult04RewardType   string
 	ConfirmedBlockResult04TxLen        int
 	ConfirmedBlockResult05SigLen       int
-
 	// TestParseConfirmedBlocks
 	ConfirmedBlocksResponse01          *RPCResponse
 	ConfirmedBlocksResponse02          *RPCResponse
@@ -58,16 +57,18 @@ type RPCResultTestSuite struct {
 	ConfirmedBlocksResult01LenOfResult int
 	ConfirmedBlocksResult02LenOfResult int
 	ConfirmedBlocksResult03            error
-
 	// TestParaseConfirmedBlocksLimit
 	ConfirmedBlocksLimitResponse01  *RPCResponse
 	ConfirmedBlocksLimitResult01Len int
-
 	// TestParseConfirmedSignaturesForAddress2
 	ConfirmedSignaturesForAddress2Response01          *RPCResponse
 	ConfirmedSignaturesForAddress201Result01BlockTime int64
 	ConfirmedSignaturesForAddress201Result01Confirm   string
 	ConfirmedSignaturesForAddress201Result01Memo      string
+	// TestParseTokenSupply
+	TokenSupplyResponse01       *RPCResponse
+	TokenSupplyResult01Amount   string
+	TokenSupplyResult01Decimals uint8
 }
 
 func (s *RPCResultTestSuite) SetupTest() {
@@ -124,7 +125,6 @@ func (s *RPCResultTestSuite) SetupTest() {
 	s.ClusterNodesResult01 = ContactInfo{PubKey: "9QzsJf7LPLj8GkXbYT3LFDKqsj2hHG7TA3xinJHu8epQ",
 		Gossip: "10.239.6.48:8001", Tpu: "10.239.6.48:8856", Rpc: "10.239.6.48:8899", Version: "1.0.0 c375ce1f"}
 	s.ClusterNodesResult02 = ContactInfo{PubKey: "6xnLs5AnhkTkNcgArVSopx32sheFim1oGQwBWUJJXG1F", Gossip: "3.14.216.138:11000"}
-
 	// TestParseConfirmedBlock
 	resp = new(RPCResponse)
 	err = json.Unmarshal([]byte(testResultConfirmedBlock01), resp)
@@ -133,58 +133,49 @@ func (s *RPCResultTestSuite) SetupTest() {
 	s.ConfirmedBlockResult01Blockhash = "3Eq21vXNB5s86c62bVuUfTeaMif1N2kUqRPBmGRJhyTA"
 	s.ConfirmedBlockResult01BlockTime = 0
 	s.ConfirmedBlockResult01TxAcctKeyLen = 5
-
 	resp = new(RPCResponse)
 	err = json.Unmarshal([]byte(testResultConfirmedBlock02), resp)
 	assert.NoError(s.T(), err, "prepare mock data fail")
 	s.ConfirmedBlockResponse02 = resp
 	s.ConfirmBlockResult02 = ErrSpecifiedBlockNotConfirmed
-
 	resp = new(RPCResponse)
 	err = json.Unmarshal([]byte(testResultConfirmedBlock03), resp)
 	assert.NoError(s.T(), err, "prepare mock data fail")
 	s.ConfirmedBlockResponse03 = resp
 	s.ConfirmBlockResult03 = errors.New("Slot 76884393 was skipped, or missing due to ledger jump to recent snapshot")
-
 	resp = new(RPCResponse)
 	err = json.Unmarshal([]byte(testResultConfirmedBlock04), resp)
 	assert.NoError(s.T(), err, "prepare mock data fail")
 	s.ConfirmedBlockResponse04 = resp
 	s.ConfirmedBlockResult04RewardType = "Fee"
 	s.ConfirmedBlockResult04TxLen = 0
-
 	resp = new(RPCResponse)
 	err = json.Unmarshal([]byte(testResultConfirmedBlock05), resp)
 	assert.NoError(s.T(), err, "prepare mock data fail")
 	s.ConfirmedBlockResponse05 = resp
 	s.ConfirmedBlockResult05SigLen = 7
-
 	// TestParseConfirmedBlocks
 	resp = new(RPCResponse)
 	err = json.Unmarshal([]byte(testResultConfirmedBlocks01), resp)
 	assert.NoError(s.T(), err, "prepare mock data fail")
 	s.ConfirmedBlocksResponse01 = resp
 	s.ConfirmedBlocksResult01LenOfResult = 5
-
 	resp = new(RPCResponse)
 	err = json.Unmarshal([]byte(testResultConfirmedBlocks02), resp)
 	assert.NoError(s.T(), err, "prepare mock data fail")
 	s.ConfirmedBlocksResponse02 = resp
 	s.ConfirmedBlocksResult02LenOfResult = 0
-
 	resp = new(RPCResponse)
 	err = json.Unmarshal([]byte(testResultConfirmedBlocks03), resp)
 	assert.NoError(s.T(), err, "prepare mock data fail")
 	s.ConfirmedBlocksResponse03 = resp
 	s.ConfirmedBlocksResult03 = errors.New("Slot range too large; max 500000")
-
 	// TestParaseConfirmedBlocksLimit
 	resp = new(RPCResponse)
 	err = json.Unmarshal([]byte(testResultConfirmedBlockWithLimit01), resp)
 	assert.NoError(s.T(), err, "prepare mock data fail")
 	s.ConfirmedBlocksLimitResponse01 = resp
 	s.ConfirmedBlocksLimitResult01Len = 3
-
 	// TestParseConfirmedSignaturesForAddress2
 	// TODO: test Memo when the type is confirmed
 	resp = new(RPCResponse)
@@ -194,6 +185,13 @@ func (s *RPCResultTestSuite) SetupTest() {
 	s.ConfirmedSignaturesForAddress201Result01BlockTime = 1620403540
 	s.ConfirmedSignaturesForAddress201Result01Confirm = "confirmed"
 	s.ConfirmedSignaturesForAddress201Result01Memo = ""
+	// TestParseTokenSupply
+	resp = new(RPCResponse)
+	err = json.Unmarshal([]byte(testResultTokenSupply01), resp)
+	assert.NoError(s.T(), err, "prepare mock data fail")
+	s.TokenSupplyResponse01 = resp
+	s.TokenSupplyResult01Amount = "555000000000000"
+	s.TokenSupplyResult01Decimals = uint8(6)
 }
 
 func TestRPCResultTestSuite(t *testing.T) {
@@ -293,5 +291,11 @@ func (s *RPCResultTestSuite) TestParseConfirmedSignaturesForAddress2() {
 	assert.Equal(s.T(), s.ConfirmedSignaturesForAddress201Result01BlockTime, sig[0].BlockTime, "wrong blocks time")
 	assert.Equal(s.T(), s.ConfirmedSignaturesForAddress201Result01Confirm, sig[0].ConfirmationStatus, "wrong blocks time")
 	assert.Equal(s.T(), s.ConfirmedSignaturesForAddress201Result01Memo, sig[0].Memo, "wrong blocks time")
-
+}
+func (s *RPCResultTestSuite) TestParseTokenSupply() {
+	fmt.Println("--------TestParseTokenSupply--------")
+	supply, err := ParseTokenSupply(s.TokenSupplyResponse01)
+	assert.NoError(s.T(), err, "TestParseTokenSupply error")
+	assert.Equal(s.T(), s.TokenSupplyResult01Amount, supply.Amount)
+	assert.Equal(s.T(), s.TokenSupplyResult01Decimals, supply.Decimals)
 }

@@ -283,3 +283,19 @@ var testResultConfirmedSignaturesForAddress201 string = `{
     ],
     "id": 1
 }`
+
+var testResultTokenSupply01 string = `{
+  "jsonrpc": "2.0",
+  "result": {
+      "context": {
+          "slot": 77292120
+      },
+      "value": {
+          "amount": "555000000000000",
+          "decimals": 6,
+          "uiAmount": 555000000,
+          "uiAmountString": "555000000"
+      }
+  },
+  "id": 1
+}`
