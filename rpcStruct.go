@@ -189,12 +189,12 @@ type ConfirmedSignaturesForAddress2ParamExtra struct {
 	Commitment CommitmentVal `json:"commitment,omitempty"`
 }
 
-//　TODO: determine Err&Memo Data structure
+//　TODO: Double Check Err&Memo Data structure (they are string in Web3.js)
 type ConfirmedSignaturesForAddress2 struct {
-	Signature          string      `json:"signature"`
-	ConfirmationStatus string      `json:"confirmationStatus"`
-	Slot               uint64      `json:"slot"`
-	Err                interface{} `json:"err,omitempty"`
-	Memo               interface{} `json:"memo,omitempty"`
-	BlockTime          int64       `json:"blockTime,omitempty"`
+	Signature          string `json:"signature"`
+	ConfirmationStatus string `json:"confirmationStatus"`
+	Slot               uint64 `json:"slot"`
+	Err                string `json:"err,omitempty"`
+	Memo               string `json:"memo,omitempty"`
+	BlockTime          int64  `json:"blockTime,omitempty"`
 }

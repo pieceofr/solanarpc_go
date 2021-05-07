@@ -67,7 +67,7 @@ type RPCResultTestSuite struct {
 	ConfirmedSignaturesForAddress2Response01          *RPCResponse
 	ConfirmedSignaturesForAddress201Result01BlockTime int64
 	ConfirmedSignaturesForAddress201Result01Confirm   string
-	ConfirmedSignaturesForAddress201Result01Memo      interface{}
+	ConfirmedSignaturesForAddress201Result01Memo      string
 }
 
 func (s *RPCResultTestSuite) SetupTest() {
@@ -193,7 +193,7 @@ func (s *RPCResultTestSuite) SetupTest() {
 	s.ConfirmedSignaturesForAddress2Response01 = resp
 	s.ConfirmedSignaturesForAddress201Result01BlockTime = 1620403540
 	s.ConfirmedSignaturesForAddress201Result01Confirm = "confirmed"
-	s.ConfirmedSignaturesForAddress201Result01Memo = nil
+	s.ConfirmedSignaturesForAddress201Result01Memo = ""
 }
 
 func TestRPCResultTestSuite(t *testing.T) {
