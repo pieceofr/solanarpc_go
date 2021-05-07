@@ -136,3 +136,20 @@ type TokenBalance struct {
 		UiAmountString string `json:"uiAmountString"`
 	} `josn:"uiTokenAmount"`
 }
+
+// GetBlockProduction
+type BlockProductionQueryParam struct {
+	Commitment string `json:"commitment,omitempty"`
+	Range      struct {
+		FirstSlot uint64 `json:"firstSlot"`
+		LastSlot  uint64 `json:"lastSlot,omitempty"`
+	} `json:"range,omitempty"`
+	Identity string `json:"identity,omitempty"`
+}
+
+// GetConfirmedBlocks
+type ConfirmedBlocksParam struct {
+	StartSlot  uint64 `json:"start_slot"`
+	EndSlot    uint64 `json:"end_slot,omitempty"`
+	Commitment string `json:"commitment,omitempty"`
+}

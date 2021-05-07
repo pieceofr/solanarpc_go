@@ -59,6 +59,7 @@ func ParseBlockCommitment(resp *RPCResponse) (*BlockCommitment, error) {
 		return nil, err
 	}
 	if len(commitment.Commitment) == 0 {
+		log.WithFields(log.Fields{"func": "ParseBlockCommitment"}).Error(ErrUnknownBlock)
 		return nil, ErrUnknownBlock
 	}
 	return commitment, nil
@@ -79,16 +80,16 @@ func ParseBlockTime(resp *RPCResponse) (uint64, error) {
 
 func ParseClusterNodes(resp *RPCResponse) ([]ContactInfo, error) {
 	if resp.Error.Code != 0 {
-		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(errors.New(resp.Error.Message))
+		log.WithFields(log.Fields{"func": "ParseClusterNodes"}).Error(errors.New(resp.Error.Message))
 		return nil, errors.New(resp.Error.Message)
 	}
 	if strings.EqualFold(string(resp.Result), "null") {
-		log.WithFields(log.Fields{"func": "ParseBlockTime"}).Error(ErrTimeStampNotAvailable)
+		log.WithFields(log.Fields{"func": "ParseClusterNodes"}).Error(ErrTimeStampNotAvailable)
 		return nil, ErrSpecifiedBlockNotConfirmed
 	}
 	nodes := []ContactInfo{}
 	if err := json.Unmarshal(resp.Result, &nodes); err != nil {
-		log.WithFields(log.Fields{"func": "GetClusterNodes"}).Error(err)
+		log.WithFields(log.Fields{"func": "ParseClusterNodes"}).Error(err)
 		return nil, err
 	}
 	return nodes, nil
@@ -97,7 +98,7 @@ func ParseClusterNodes(resp *RPCResponse) ([]ContactInfo, error) {
 func ParseConfirmedBlock(resp *RPCResponse) (*ConfirmedBlock, error) {
 	// check Error Code
 	if resp.Error.Code != 0 {
-		log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Error(errors.New(resp.Error.Message))
+		log.WithFields(log.Fields{"func": "ParseConfirmedBlock"}).Error(errors.New(resp.Error.Message))
 		return nil, errors.New(resp.Error.Message)
 	}
 	if strings.EqualFold(string(resp.Result), "null") {
@@ -108,4 +109,16 @@ func ParseConfirmedBlock(resp *RPCResponse) (*ConfirmedBlock, error) {
 	json.Unmarshal(resp.Result, block)
 
 	return block, nil
+}
+
+func ParseConfirmedBlocks(resp *RPCResponse) ([]uint64, error) {
+	// check Error Code
+	if resp.Error.Code != 0 {
+		log.WithFields(log.Fields{"func": "ParseConfirmedBlocks"}).Error(errors.New(resp.Error.Message))
+		return nil, errors.New(resp.Error.Message)
+	}
+
+	blocks := []uint64{}
+	json.Unmarshal(resp.Result, &blocks)
+	return blocks, nil
 }

@@ -1,12 +1,5 @@
 package solanarpc
 
-var testAccount []string = []string{
-	"ELQ4W3nB1Yysk7m2NwYVk5NvHh9dAjsoB4vzV3n8Z9ut",
-	"4fYNw3dojWmQ4dXtSGE9epjRGy9pFSx62YypT7avPYvB",
-	"4fYNw3dojWmQ4dXtSGE9epjRGy9pFSx62YypT7avPYvA",
-	"XLQ4W3nB1Yysk7m2NwYVk5NvHh9dAjsoB4vzV3n8Z9ux",
-}
-
 var testResultAccountExsitBase58 string = `{
 	"jsonrpc": "2.0",
 	"result": {
@@ -189,6 +182,55 @@ var testResultConfirmedBlock03 string = `{
     "error": {
         "code": -32007,
         "message": "Slot 76884393 was skipped, or missing due to ledger jump to recent snapshot"
+    },
+    "id": 1
+}`
+
+var testResultBlockProduction01 string = `{
+	"jsonrpc": "2.0",
+	"result": {
+	  "context": {
+		"slot": 9887
+	  },
+	  "value": {
+		"byIdentity": {
+		  "85iYT5RuzRTDgjyRa3cP8SYhM2j21fj7NhfJ3peu1DPr": [
+			9888,
+			9886
+		  ]
+		},
+		"range": {
+		  "firstSlot": 0,
+		  "lastSlot": 9887,
+		}
+	  }
+	},
+	"id": 1
+  }`
+
+var testResultConfirmedBlocks01 string = `{
+    "jsonrpc": "2.0",
+    "result": [
+        77228566,
+        77228567,
+        77228568,
+        77228569,
+        77228570
+    ],
+    "id": 1
+}`
+
+var testResultConfirmedBlocks02 string = `{
+    "jsonrpc": "2.0",
+    "result": [],
+    "id": 1
+}`
+
+var testResultConfirmedBlocks03 string = `{
+    "jsonrpc": "2.0",
+    "error": {
+        "code": -32602,
+        "message": "Slot range too large; max 500000"
     },
     "id": 1
 }`

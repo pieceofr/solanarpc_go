@@ -45,6 +45,16 @@ type RPCResultTestSuite struct {
 	ConfirmedBlockResult01BlockTime    int64
 	ConfirmBlockResult02               error
 	ConfirmBlockResult03               error
+
+	// TestParseBlockProduction
+	ParseBlockProductionResponse01 *RPCResponse
+	//ParseBlockProductionResult01   *RPCResponse
+	ConfirmedBlocksResponse01          *RPCResponse
+	ConfirmedBlocksResponse02          *RPCResponse
+	ConfirmedBlocksResponse03          *RPCResponse
+	ConfirmedBlocksResult01LenOfResult int
+	ConfirmedBlocksResult02LenOfResult int
+	ConfirmedBlocksResult03            error
 }
 
 func (s *RPCResultTestSuite) SetupTest() {
@@ -123,6 +133,25 @@ func (s *RPCResultTestSuite) SetupTest() {
 	s.ConfirmedBlockResponse03 = resp
 	s.ConfirmBlockResult03 = errors.New("Slot 76884393 was skipped, or missing due to ledger jump to recent snapshot")
 
+	// TestParseConfirmedBlocks
+	resp = new(RPCResponse)
+	err = json.Unmarshal([]byte(testResultConfirmedBlocks01), resp)
+	assert.NoError(s.T(), err, "prepare mock data fail")
+	s.ConfirmedBlocksResponse01 = resp
+	s.ConfirmedBlocksResult01LenOfResult = 5
+
+	resp = new(RPCResponse)
+	err = json.Unmarshal([]byte(testResultConfirmedBlocks02), resp)
+	assert.NoError(s.T(), err, "prepare mock data fail")
+	s.ConfirmedBlocksResponse02 = resp
+	s.ConfirmedBlocksResult02LenOfResult = 0
+
+	resp = new(RPCResponse)
+	err = json.Unmarshal([]byte(testResultConfirmedBlocks03), resp)
+	assert.NoError(s.T(), err, "prepare mock data fail")
+	s.ConfirmedBlocksResponse03 = resp
+	s.ConfirmedBlocksResult03 = errors.New("Slot range too large; max 500000")
+
 }
 
 func TestRPCResultTestSuite(t *testing.T) {
@@ -183,5 +212,20 @@ func (s *RPCResultTestSuite) TestParseConfirmedBlock() {
 	assert.Equal(s.T(), err, s.ConfirmBlockResult02)
 	_, err = ParseConfirmedBlock(s.ConfirmedBlockResponse03)
 	assert.Equal(s.T(), err, s.ConfirmBlockResult03)
+
+}
+func (s *RPCResultTestSuite) TestParseConfirmedBlocks() {
+	fmt.Println("--------TestParseConfirmedBlock\"s\"--------")
+	blocks, err := ParseConfirmedBlocks(s.ConfirmedBlocksResponse01)
+	assert.NoError(s.T(), err, "ParseConfirmedBlock error")
+	assert.Equal(s.T(), len(blocks), s.ConfirmedBlocksResult01LenOfResult, "wrong number of blocks")
+
+	blocks, err = ParseConfirmedBlocks(s.ConfirmedBlocksResponse02)
+	assert.NoError(s.T(), err, "ParseConfirmedBlock error")
+	assert.Equal(s.T(), len(blocks), s.ConfirmedBlocksResult02LenOfResult, "wrong number of blocks")
+
+	_, err = ParseConfirmedBlocks(s.ConfirmedBlocksResponse03)
+	assert.Error(s.T(), err, "ParseConfirmedBlock error")
+	assert.Equal(s.T(), err, s.ConfirmedBlocksResult03, "wrong number of blocks")
 
 }
