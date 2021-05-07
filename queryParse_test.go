@@ -62,6 +62,12 @@ type RPCResultTestSuite struct {
 	// TestParaseConfirmedBlocksLimit
 	ConfirmedBlocksLimitResponse01  *RPCResponse
 	ConfirmedBlocksLimitResult01Len int
+
+	// TestParseConfirmedSignaturesForAddress2
+	ConfirmedSignaturesForAddress2Response01          *RPCResponse
+	ConfirmedSignaturesForAddress201Result01BlockTime int64
+	ConfirmedSignaturesForAddress201Result01Confirm   string
+	ConfirmedSignaturesForAddress201Result01Memo      interface{}
 }
 
 func (s *RPCResultTestSuite) SetupTest() {
@@ -179,6 +185,15 @@ func (s *RPCResultTestSuite) SetupTest() {
 	s.ConfirmedBlocksLimitResponse01 = resp
 	s.ConfirmedBlocksLimitResult01Len = 3
 
+	// TestParseConfirmedSignaturesForAddress2
+	// TODO: test Memo when the type is confirmed
+	resp = new(RPCResponse)
+	err = json.Unmarshal([]byte(testResultConfirmedSignaturesForAddress201), resp)
+	assert.NoError(s.T(), err, "prepare mock data fail")
+	s.ConfirmedSignaturesForAddress2Response01 = resp
+	s.ConfirmedSignaturesForAddress201Result01BlockTime = 1620403540
+	s.ConfirmedSignaturesForAddress201Result01Confirm = "confirmed"
+	s.ConfirmedSignaturesForAddress201Result01Memo = nil
 }
 
 func TestRPCResultTestSuite(t *testing.T) {
@@ -267,6 +282,16 @@ func (s *RPCResultTestSuite) TestParseConfirmedBlocks() {
 func (s *RPCResultTestSuite) TestParaseConfirmedBlocksLimit() {
 	fmt.Println("--------TestParaseConfirmedBlocksLimit--------")
 	blocks, err := ParseConfimedBlocksLimit(s.ConfirmedBlocksLimitResponse01)
-	assert.NoError(s.T(), err, "ParseConfirmedBlockLimit error")
+	assert.NoError(s.T(), err, "ParaseConfirmedBlocksLimit error")
 	assert.Equal(s.T(), len(blocks), s.ConfirmedBlocksLimitResult01Len, "wrong number of blocks")
+}
+
+func (s *RPCResultTestSuite) TestParseConfirmedSignaturesForAddress2() {
+	fmt.Println("--------TestParseConfirmedSignaturesForAddress2--------")
+	sig, err := ParseConfirmedSignaturesForAddress2(s.ConfirmedSignaturesForAddress2Response01)
+	assert.NoError(s.T(), err, "ParseConfirmedSignaturesForAddress2 error")
+	assert.Equal(s.T(), s.ConfirmedSignaturesForAddress201Result01BlockTime, sig[0].BlockTime, "wrong blocks time")
+	assert.Equal(s.T(), s.ConfirmedSignaturesForAddress201Result01Confirm, sig[0].ConfirmationStatus, "wrong blocks time")
+	assert.Equal(s.T(), s.ConfirmedSignaturesForAddress201Result01Memo, sig[0].Memo, "wrong blocks time")
+
 }

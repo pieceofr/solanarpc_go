@@ -231,27 +231,6 @@ var testResultConfirmedBlock05 string = `{
     },
     "id": 1
 }`
-var testResultBlockProduction01 string = `{
-	"jsonrpc": "2.0",
-	"result": {
-	  "context": {
-		"slot": 9887
-	  },
-	  "value": {
-		"byIdentity": {
-		  "85iYT5RuzRTDgjyRa3cP8SYhM2j21fj7NhfJ3peu1DPr": [
-			9888,
-			9886
-		  ]
-		},
-		"range": {
-		  "firstSlot": 0,
-		  "lastSlot": 9887,
-		}
-	  }
-	},
-	"id": 1
-  }`
 
 var testResultConfirmedBlocks01 string = `{
     "jsonrpc": "2.0",
@@ -286,6 +265,21 @@ var testResultConfirmedBlockWithLimit01 string = `{
         77118633,
         77118634,
         77118635
+    ],
+    "id": 1
+}`
+
+var testResultConfirmedSignaturesForAddress201 string = `{
+    "jsonrpc": "2.0",
+    "result": [
+        {
+            "blockTime": 1620403540,
+            "confirmationStatus": "confirmed",
+            "err": null,
+            "memo": null,
+            "signature": "67k4Uzed5ZBBgbSdPTCSUCx2pLyJTDXTZzzAKfQejviPdUJM5Yz1njXeHdrbg7nQKCsBfWBsVte7b34mfKeypW3B",
+            "slot": 77279819
+        }
     ],
     "id": 1
 }`

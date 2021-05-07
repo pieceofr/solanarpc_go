@@ -179,3 +179,22 @@ type ConfirmedBlocksWithLimitParam struct {
 	Limit            uint64 `json:"limit"`
 	CommitmentConfig `json:"commitment,omitempty"`
 }
+
+// GetConfirmedSignaturesForAddress2
+
+type ConfirmedSignaturesForAddress2ParamExtra struct {
+	Limit      uint64        `json:"limit,omitempty"`
+	Before     string        `json:"before,omitempty"`
+	Until      string        `json:"until,omitempty"`
+	Commitment CommitmentVal `json:"commitment,omitempty"`
+}
+
+//　TODO: determine Err&Memo Data structure
+type ConfirmedSignaturesForAddress2 struct {
+	Signature          string      `json:"signature"`
+	ConfirmationStatus string      `json:"confirmationStatus"`
+	Slot               uint64      `json:"slot"`
+	Err                interface{} `json:"err,omitempty"`
+	Memo               interface{} `json:"memo,omitempty"`
+	BlockTime          int64       `json:"blockTime,omitempty"`
+}

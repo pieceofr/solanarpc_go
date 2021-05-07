@@ -3,6 +3,7 @@ package solanarpc
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -128,4 +129,20 @@ func ParseConfimedBlocksLimit(resp *RPCResponse) ([]uint64, error) {
 	blocks := []uint64{}
 	json.Unmarshal(resp.Result, &blocks)
 	return blocks, nil
+}
+
+func ParseConfirmedSignaturesForAddress2(resp *RPCResponse) ([]ConfirmedSignaturesForAddress2, error) {
+	// check Error Code
+	if resp.Error.Code != 0 {
+		log.WithFields(log.Fields{"func": "ParseConfirmedSignaturesForAddress2"}).Error(errors.New(resp.Error.Message))
+		return nil, errors.New(resp.Error.Message)
+	}
+	sig := []ConfirmedSignaturesForAddress2{}
+	err := json.Unmarshal(resp.Result, &sig)
+	fmt.Println(sig)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "ParseConfirmedSignaturesForAddress2"}).Error(err)
+		return nil, err
+	}
+	return sig, nil
 }

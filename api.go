@@ -378,3 +378,25 @@ func (r *RPCClient) GetConfirmedBlocksWithLimit(params *ConfirmedBlocksWithLimit
 	}
 	return resp, nil
 }
+
+func (r *RPCClient) GetConfirmedSignaturesForAddress2(base58Sig string, extra *ConfirmedSignaturesForAddress2ParamExtra) (*RPCResponse, error) {
+	id := RandomID()
+	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getConfirmedSignaturesForAddress2"}
+
+	if len(base58Sig) == 0 {
+		return nil, ErrInvalidFuncParameter
+	}
+	rpcReq.Params = append(rpcReq.Params, base58Sig)
+	if extra != nil {
+		rpcReq.Params = append(rpcReq.Params, extra)
+	}
+	resp, err := r.DoPostRequest(rpcReq)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetConfirmedSignaturesForAddress2"}).Error(err)
+		return nil, err
+	}
+	if resp.ID != id {
+		return nil, ErrIDMismatch
+	}
+	return resp, nil
+}
