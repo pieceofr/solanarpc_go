@@ -404,40 +404,23 @@ func (r *RPCClient) GetClusterNodes() (*RPCResponse, error) {
 	return rpcResp, nil
 }
 
-func (r *RPCClient) GetConfirmedBlock(slot uint64, eMethod EncodeMethod, tDetail TransactionDetails, rewards bool, commitment Commitment) (*RPCResponse, error) {
+func (r *RPCClient) GetConfirmedBlock(params *ConfirmedBlockParam) (*RPCResponse, error) {
 	query, err := r.HttpRequstURL("")
 	if err != nil {
 		log.WithFields(log.Fields{"func": "GetConfirmBlock", "reqString": query}).Error(err)
 		return nil, err
 	}
+
 	// Construct Query Params
 	id := RandomID()
 	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getConfirmedBlock"}
-	type Obj struct {
-		Encoding           string `json:"encoding,omitempty"`
-		TransactionDetails string `json:"transactionDetails,omitempty"`
-		Rewards            bool   `json:"rewards,omitempty"`
-		Commitment         string `json:"commitment,omitempty"`
+	rpcReq.Params = append(rpcReq.Params, params.Slot)
+	emptyParamObj := ConfirmedBlockParamObj{}
+
+	if params.ConfirmedBlockParamObj != emptyParamObj {
+		rpcReq.Params = append(rpcReq.Params, params.ConfirmedBlockParamObj)
 	}
 
-	options := Obj{}
-	if eMethod != EncodeDefault && len(eMethod) != 0 {
-		options.Encoding = string(eMethod)
-	}
-	if tDetail != TransactionDetailsDefault && len(tDetail) != 0 {
-		options.TransactionDetails = string(tDetail)
-	}
-
-	options.Rewards = rewards
-
-	if commitment == Processed {
-		return nil, ErrProcessedNotSupported
-	}
-
-	if len(commitment) != 0 && commitment != CommitmentDefault {
-		options.Commitment = string(commitment)
-	}
-	rpcReq.Params = append(rpcReq.Params, slot, options)
 	jsonParams, err := json.Marshal(rpcReq)
 	if err != nil {
 		log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Error(err)
@@ -461,7 +444,7 @@ func (r *RPCClient) GetConfirmedBlock(slot uint64, eMethod EncodeMethod, tDetail
 		log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Error(err)
 		return nil, err
 	}
-	// log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Debug(string(body))
+	//log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Debug(string(body))
 	err = json.Unmarshal(body, rpcResp)
 	if err != nil {
 		log.WithFields(log.Fields{"func": "GetConfirmBlock"}).Error(err)

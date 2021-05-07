@@ -40,11 +40,16 @@ type RPCResultTestSuite struct {
 	ConfirmedBlockResponse01           *RPCResponse
 	ConfirmedBlockResponse02           *RPCResponse
 	ConfirmedBlockResponse03           *RPCResponse
+	ConfirmedBlockResponse04           *RPCResponse
+	ConfirmedBlockResponse05           *RPCResponse
 	ConfirmedBlockResult01Blockhash    string
 	ConfirmedBlockResult01TxAcctKeyLen int
 	ConfirmedBlockResult01BlockTime    int64
 	ConfirmBlockResult02               error
 	ConfirmBlockResult03               error
+	ConfirmedBlockResult04RewardType   string
+	ConfirmedBlockResult04TxLen        int
+	ConfirmedBlockResult05SigLen       int
 
 	// TestParseBlockProduction
 	ParseBlockProductionResponse01 *RPCResponse
@@ -133,6 +138,19 @@ func (s *RPCResultTestSuite) SetupTest() {
 	s.ConfirmedBlockResponse03 = resp
 	s.ConfirmBlockResult03 = errors.New("Slot 76884393 was skipped, or missing due to ledger jump to recent snapshot")
 
+	resp = new(RPCResponse)
+	err = json.Unmarshal([]byte(testResultConfirmedBlock04), resp)
+	assert.NoError(s.T(), err, "prepare mock data fail")
+	s.ConfirmedBlockResponse04 = resp
+	s.ConfirmedBlockResult04RewardType = "Fee"
+	s.ConfirmedBlockResult04TxLen = 0
+
+	resp = new(RPCResponse)
+	err = json.Unmarshal([]byte(testResultConfirmedBlock05), resp)
+	assert.NoError(s.T(), err, "prepare mock data fail")
+	s.ConfirmedBlockResponse05 = resp
+	s.ConfirmedBlockResult05SigLen = 7
+
 	// TestParseConfirmedBlocks
 	resp = new(RPCResponse)
 	err = json.Unmarshal([]byte(testResultConfirmedBlocks01), resp)
@@ -213,6 +231,14 @@ func (s *RPCResultTestSuite) TestParseConfirmedBlock() {
 	_, err = ParseConfirmedBlock(s.ConfirmedBlockResponse03)
 	assert.Equal(s.T(), err, s.ConfirmBlockResult03)
 
+	info, err = ParseConfirmedBlock(s.ConfirmedBlockResponse04)
+	assert.NoError(s.T(), err, "ParseConfirmedBlock error")
+	assert.Equal(s.T(), info.Rewards[0].RewardType, s.ConfirmedBlockResult04RewardType)
+	assert.Equal(s.T(), len(info.Transactions), s.ConfirmedBlockResult04TxLen)
+
+	info, err = ParseConfirmedBlock(s.ConfirmedBlockResponse05)
+	assert.NoError(s.T(), err, "ParseConfirmedBlock error")
+	assert.Equal(s.T(), len(info.Signatures), s.ConfirmedBlockResult05SigLen)
 }
 func (s *RPCResultTestSuite) TestParseConfirmedBlocks() {
 	fmt.Println("--------TestParseConfirmedBlock\"s\"--------")

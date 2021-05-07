@@ -77,19 +77,33 @@ type ContactInfo struct {
 }
 
 // GetConfirmedBlock
+
+type ConfirmedBlockParam struct {
+	Slot                   uint64 `json:"slot"`
+	ConfirmedBlockParamObj `json:"confirmedBlockParamObj,omitempty"`
+}
+
+type ConfirmedBlockParamObj struct {
+	Encoding           string `json:"encoding,omitempty"`
+	TransactionDetails string `json:"transactionDetails,omitempty"`
+	Rewards            bool   `json:"rewards,omitempty"`
+	Commitment         string `json:"commitment,omitempty"`
+}
+
 type ConfirmedBlock struct {
 	Blockhash         string                      `json:"blockhash"`
 	PreviousBlockhash string                      `json:"previousBlockhash"`
 	ParentSlot        uint64                      `json:"parentSlot"`
 	Transactions      []ConfirmedBlockTransaction `json:"transactions"`
-	Signatures        string                      `json:"signatures"`
-	Rewards           struct {
-		Pubkey      string `json:"pubkey"`
-		Lamports    int64  `json:"lamports"`
-		PostBalance uint64 `json:"postBalance"`
-		RewardType  string `json:"rewardType"` // "fee", "rent", "voting", "staking"
-	} `json:"rewards"`
-	BlockTime int64 `json:"blockTime"` //<i64 | null>
+	Signatures        []string                    `json:"signatures"`
+	Rewards           []Reward                    `json:"rewards,omitempty"`
+	BlockTime         int64                       `json:"blockTime"` //<i64 | null>
+}
+type Reward struct {
+	Pubkey      string `json:"pubkey"`
+	Lamports    int64  `json:"lamports"`
+	PostBalance uint64 `json:"postBalance"`
+	RewardType  string `json:"rewardType"` // "fee", "rent", "voting", "staking"
 }
 
 type ConfirmedBlockTransaction struct {

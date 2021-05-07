@@ -186,6 +186,51 @@ var testResultConfirmedBlock03 string = `{
     "id": 1
 }`
 
+var testResultConfirmedBlock04 string = `{
+    "jsonrpc": "2.0",
+    "result": {
+        "blockTime": 1620374821,
+        "blockhash": "8FBzBHVg5eLY6LJ2uhzT1vYxDWE6raafGfePssNKNdYQ",
+        "parentSlot": 77228599,
+        "previousBlockhash": "67kqu56ayRW91kwT2yDYYhx2QQHsz3YZtcARZwoKXc88",
+        "rewards": [
+            {
+                "lamports": 1817500,
+                "postBalance": 912525496459,
+                "pubkey": "EvnRmnMrd69kFdbLMxWkTn1icZ7DCceRhvmb2SJXqDo4",
+                "rewardType": "Fee"
+            }
+        ]
+    },
+    "id": 1
+}`
+var testResultConfirmedBlock05 string = `{
+    "jsonrpc": "2.0",
+    "result": {
+        "blockTime": 1620374821,
+        "blockhash": "8FBzBHVg5eLY6LJ2uhzT1vYxDWE6raafGfePssNKNdYQ",
+        "parentSlot": 77228599,
+        "previousBlockhash": "67kqu56ayRW91kwT2yDYYhx2QQHsz3YZtcARZwoKXc88",
+        "rewards": [
+            {
+                "lamports": 1817500,
+                "postBalance": 912525496459,
+                "pubkey": "EvnRmnMrd69kFdbLMxWkTn1icZ7DCceRhvmb2SJXqDo4",
+                "rewardType": "Fee"
+            }
+        ],
+        "signatures": [
+            "3sZKvqgwCSDraErrqE8WQiXuWf85zhezR2VEQFNBAMyYJMUw5psX61iMALxmxRohAwSkEDCTRtDTTXEGVzjdtfJQ",
+            "5sUcdRKENq8cy1XWXXAJnrFHnwzsgo1H2vdPCjunCQcvhkRDtPk7bDtLEJm7KDugSifVT4pRy6XFASe4PL5WGpEK",
+            "4pXBJxxUrBBepVFi5LmHbkB6paY89cKbj9XGWq1C61ehkxojEGJ5NcJbVMpzSLURqfbYMEsEDzzubq6SDLeDFvtv",
+            "39YeURzS3Eku3CcukdTim4CMru1BY3WDSqqN4BtrH694FNsP1CsDSVJNsc97BLgEcZhpzmhwVQSYhy4HbjsXtBgm",
+            "JtXRg9woJWWgZwJTTvdy6YdtdY6akGkb2Jk6nJmQbQ3reF6EDPg4jwzbBNapt9cMuMyWCXhRMpwWhzk7Kosurxj",
+            "5BP9ZkWnht9uEHgjjphUuki6V7rQwNzY42vaTEdu8EuJVRDrMNeAFYx34xX5EtGayyqbdFMVok89j4V7EpZ7K5mC",
+            "5Mdq1gfis4nzN8CZXNvi3sdyj4vzrQYGfQzwq776KEDP5PnJyJGuqXHKca43U3aeH2DRmUJ7mtMWMuGZ8tT8AtxH"
+        ]
+    },
+    "id": 1
+}`
 var testResultBlockProduction01 string = `{
 	"jsonrpc": "2.0",
 	"result": {
