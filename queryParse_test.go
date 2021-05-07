@@ -51,15 +51,17 @@ type RPCResultTestSuite struct {
 	ConfirmedBlockResult04TxLen        int
 	ConfirmedBlockResult05SigLen       int
 
-	// TestParseBlockProduction
-	ParseBlockProductionResponse01 *RPCResponse
-	//ParseBlockProductionResult01   *RPCResponse
+	// TestParseConfirmedBlocks
 	ConfirmedBlocksResponse01          *RPCResponse
 	ConfirmedBlocksResponse02          *RPCResponse
 	ConfirmedBlocksResponse03          *RPCResponse
 	ConfirmedBlocksResult01LenOfResult int
 	ConfirmedBlocksResult02LenOfResult int
 	ConfirmedBlocksResult03            error
+
+	// TestParaseConfirmedBlocksLimit
+	ConfirmedBlocksLimitResponse01  *RPCResponse
+	ConfirmedBlocksLimitResult01Len int
 }
 
 func (s *RPCResultTestSuite) SetupTest() {
@@ -170,13 +172,19 @@ func (s *RPCResultTestSuite) SetupTest() {
 	s.ConfirmedBlocksResponse03 = resp
 	s.ConfirmedBlocksResult03 = errors.New("Slot range too large; max 500000")
 
+	// TestParaseConfirmedBlocksLimit
+	resp = new(RPCResponse)
+	err = json.Unmarshal([]byte(testResultConfirmedBlockWithLimit01), resp)
+	s.ConfirmedBlocksLimitResponse01 = resp
+	s.ConfirmedBlocksLimitResult01Len = 3
+
 }
 
 func TestRPCResultTestSuite(t *testing.T) {
 	suite.Run(t, new(RPCResultTestSuite))
 }
 
-func (s *RPCResultTestSuite) TestParseAccountInfoResponse() {
+func (s *RPCResultTestSuite) TestParseAccountInfo() {
 	fmt.Println("--------TestParseAccountInfoResponse--------")
 	acct1Info, err := ParseAccountInfoResponse(s.AccountInfoValueResponse01)
 	assert.NoError(s.T(), err, "ParseAccountInfoResponse error")
@@ -195,25 +203,25 @@ func (s *RPCResultTestSuite) TestParseBalanceResponse() {
 
 func (s *RPCResultTestSuite) TestParseBlockCommitment() {
 	fmt.Println("--------TestParseBlockCommitment--------")
-	commitment, err := ParseBlockCommitment(s.BlockCommitmentResponse01)
+	commitment, err := ParseBlockCommitmentResponse(s.BlockCommitmentResponse01)
 	assert.NoError(s.T(), err, "ParseBlockCommitment error")
 	assert.Equal(s.T(), *commitment, s.BlockCommitmentResult01, "commitment Mismatch")
 
 }
 func (s *RPCResultTestSuite) TestParseBlockTime() {
 	fmt.Println("--------TestParseBlockTime--------")
-	ts, err := ParseBlockTime(s.BlockTimeResponse01)
+	ts, err := ParseBlockTimeResponse(s.BlockTimeResponse01)
 	assert.NoError(s.T(), err, "ParseBlockTime error")
 	assert.Equal(s.T(), ts, s.BlockTimeResult01, "blocktime Mismatch")
-	_, err = ParseBlockTime(s.BlockTimeResponse02)
+	_, err = ParseBlockTimeResponse(s.BlockTimeResponse02)
 	assert.Equal(s.T(), err, s.BlockTimeResult02)
-	_, err = ParseBlockTime(s.BlockTimeResponse03)
+	_, err = ParseBlockTimeResponse(s.BlockTimeResponse03)
 	assert.Error(s.T(), err, "ParseBlockTime ParseUint Error")
 }
 
 func (s *RPCResultTestSuite) TestParseClusterNodes() {
 	fmt.Println("--------TestParseClusterNodes--------")
-	nodes, err := ParseClusterNodes(s.ClusterNodesResponse01)
+	nodes, err := ParseClusterNodesResponse(s.ClusterNodesResponse01)
 	assert.NoError(s.T(), err, "ParseClusterNodes error")
 	assert.Equal(s.T(), nodes[0], s.ClusterNodesResult01, "Cluster Node Mismatch")
 	// testing null in the field
@@ -221,22 +229,22 @@ func (s *RPCResultTestSuite) TestParseClusterNodes() {
 }
 func (s *RPCResultTestSuite) TestParseConfirmedBlock() {
 	fmt.Println("--------TestParseConfirmedBlock--------")
-	info, err := ParseConfirmedBlock(s.ConfirmedBlockResponse01)
+	info, err := ParseConfirmedBlockResponse(s.ConfirmedBlockResponse01)
 	assert.NoError(s.T(), err, "ParseConfirmedBlock error")
 	assert.Equal(s.T(), info.Blockhash, s.ConfirmedBlockResult01Blockhash, "ParseConfirmedBlock parse error")
 	assert.Equal(s.T(), info.BlockTime, s.ConfirmedBlockResult01BlockTime, "ParseConfirmedBlock can not handle null blockTime")
 	assert.Equal(s.T(), len(info.Transactions[0].Transaction.Message.AccountKeys), s.ConfirmedBlockResult01TxAcctKeyLen, "ParseConfirmedBlock Deep Parse error")
-	_, err = ParseConfirmedBlock(s.ConfirmedBlockResponse02)
+	_, err = ParseConfirmedBlockResponse(s.ConfirmedBlockResponse02)
 	assert.Equal(s.T(), err, s.ConfirmBlockResult02)
-	_, err = ParseConfirmedBlock(s.ConfirmedBlockResponse03)
+	_, err = ParseConfirmedBlockResponse(s.ConfirmedBlockResponse03)
 	assert.Equal(s.T(), err, s.ConfirmBlockResult03)
 
-	info, err = ParseConfirmedBlock(s.ConfirmedBlockResponse04)
+	info, err = ParseConfirmedBlockResponse(s.ConfirmedBlockResponse04)
 	assert.NoError(s.T(), err, "ParseConfirmedBlock error")
 	assert.Equal(s.T(), info.Rewards[0].RewardType, s.ConfirmedBlockResult04RewardType)
 	assert.Equal(s.T(), len(info.Transactions), s.ConfirmedBlockResult04TxLen)
 
-	info, err = ParseConfirmedBlock(s.ConfirmedBlockResponse05)
+	info, err = ParseConfirmedBlockResponse(s.ConfirmedBlockResponse05)
 	assert.NoError(s.T(), err, "ParseConfirmedBlock error")
 	assert.Equal(s.T(), len(info.Signatures), s.ConfirmedBlockResult05SigLen)
 }
@@ -254,4 +262,10 @@ func (s *RPCResultTestSuite) TestParseConfirmedBlocks() {
 	assert.Error(s.T(), err, "ParseConfirmedBlock error")
 	assert.Equal(s.T(), err, s.ConfirmedBlocksResult03, "wrong number of blocks")
 
+}
+func (s *RPCResultTestSuite) TestParaseConfirmedBlocksLimit() {
+	fmt.Println("--------TestParaseConfirmedBlocksLimit--------")
+	blocks, err := ParseConfimedBlocksLimit(s.ConfirmedBlocksLimitResponse01)
+	assert.NoError(s.T(), err, "ParseConfirmedBlockLimit error")
+	assert.Equal(s.T(), len(blocks), s.ConfirmedBlocksLimitResult01Len, "wrong number of blocks")
 }
