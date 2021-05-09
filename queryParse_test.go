@@ -69,6 +69,22 @@ type RPCResultTestSuite struct {
 	TokenSupplyResponse01       *RPCResponse
 	TokenSupplyResult01Amount   string
 	TokenSupplyResult01Decimals uint8
+
+	// TestParseTokenAccountBalance
+	TokenAccountBalanceResponse01 *RPCResponse
+	TokenAccountBalanceResponse02 *RPCResponse
+	TokenAccountBalanceResult01   string
+	TokenAccountBalanceResult02   error
+	// TestParseTokenAccountsByDelegate
+	TokenAccountsByDelegateResponse01     *RPCResponse
+	TokenAccountsByDelegateResult01Owner  string
+	TokenAccountsByDelegateResult01Mint   string
+	TokenAccountsByDelegateResult01Amount string
+
+	TokenAccountsByDelegateResponse02       *RPCResponse
+	TokenAccountsByDelegateResult02Lamports uint64
+	TokenAccountsByDelegateResult02Pkey     string
+	TokenAccountsByDelegateResult02Encode   string
 }
 
 func (s *RPCResultTestSuite) SetupTest() {
@@ -192,6 +208,35 @@ func (s *RPCResultTestSuite) SetupTest() {
 	s.TokenSupplyResponse01 = resp
 	s.TokenSupplyResult01Amount = "555000000000000"
 	s.TokenSupplyResult01Decimals = uint8(6)
+	// TestParseTokenAccountBalance
+	resp = new(RPCResponse)
+	err = json.Unmarshal([]byte(testResultTokenAccountBalance01), resp)
+	assert.NoError(s.T(), err, "prepare mock data fail")
+	s.TokenAccountBalanceResponse01 = resp
+	s.TokenAccountBalanceResult01 = "5065734"
+
+	resp = new(RPCResponse)
+	err = json.Unmarshal([]byte(testResultTokenAccountBalance02), resp)
+	assert.NoError(s.T(), err, "prepare mock data fail")
+	s.TokenAccountBalanceResponse02 = resp
+	s.TokenAccountBalanceResult02 = errors.New("Invalid param: not a v2.0 Token account")
+	// TestParseTokenAccountsByDelegate
+
+	resp = new(RPCResponse)
+	err = json.Unmarshal([]byte(testResultTokenAccountsByDelegate01), resp)
+	assert.NoError(s.T(), err, "prepare mock data fail")
+	s.TokenAccountsByDelegateResponse01 = resp
+	s.TokenAccountsByDelegateResult01Owner = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+	s.TokenAccountsByDelegateResult01Mint = "3wyAj7Rt1TWVPZVteFJPLa26JmLvdb1CAKEFZm3NY75E"
+	s.TokenAccountsByDelegateResult01Amount = "1"
+
+	resp = new(RPCResponse)
+	err = json.Unmarshal([]byte(testResultTokenAccountsByDelegate02), resp)
+	assert.NoError(s.T(), err, "prepare mock data fail")
+	s.TokenAccountsByDelegateResponse02 = resp
+	s.TokenAccountsByDelegateResult02Lamports = uint64(1726080)
+	s.TokenAccountsByDelegateResult02Pkey = "11116bv5nS2h3y12kD1yUKeMZvGcKLSjQgX6BeV7u1FrjeJcKfsHRTPuR3oZ1EioKtYGiYxpxMG5vpbZLsbcBYBEmZZcMKaSoGx9JZeAuWf"
+	s.TokenAccountsByDelegateResult02Encode = "base58"
 }
 
 func TestRPCResultTestSuite(t *testing.T) {
@@ -287,7 +332,7 @@ func (s *RPCResultTestSuite) TestParaseConfirmedBlocksLimit() {
 func (s *RPCResultTestSuite) TestParseConfirmedSignaturesForAddress2() {
 	fmt.Println("--------TestParseConfirmedSignaturesForAddress2--------")
 	sig, err := ParseConfirmedSignaturesForAddress2(s.ConfirmedSignaturesForAddress2Response01)
-	assert.NoError(s.T(), err, "ParseConfirmedSignaturesForAddress2 error")
+	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), s.ConfirmedSignaturesForAddress201Result01BlockTime, sig[0].BlockTime)
 	assert.Equal(s.T(), s.ConfirmedSignaturesForAddress201Result01Confirm, sig[0].ConfirmationStatus)
 	assert.Equal(s.T(), s.ConfirmedSignaturesForAddress201Result01Memo, sig[0].Memo)
@@ -295,7 +340,27 @@ func (s *RPCResultTestSuite) TestParseConfirmedSignaturesForAddress2() {
 func (s *RPCResultTestSuite) TestParseTokenSupply() {
 	fmt.Println("--------TestParseTokenSupply--------")
 	supply, err := ParseTokenSupply(s.TokenSupplyResponse01)
-	assert.NoError(s.T(), err, "TestParseTokenSupply error")
+	assert.NoError(s.T(), err)
 	assert.Equal(s.T(), s.TokenSupplyResult01Amount, supply.Amount)
 	assert.Equal(s.T(), s.TokenSupplyResult01Decimals, supply.Decimals)
+}
+func (s *RPCResultTestSuite) TestParseTokenAccountBalance() {
+	fmt.Println("--------TestParseTokenAccountBalance--------")
+	supply, err := ParseTokenSupply(s.TokenAccountBalanceResponse01)
+	assert.NoError(s.T(), err)
+	assert.Equal(s.T(), s.TokenAccountBalanceResult01, supply.Amount)
+	_, err = ParseTokenSupply(s.TokenAccountBalanceResponse02)
+	assert.Error(s.T(), err)
+	assert.Equal(s.T(), s.TokenAccountBalanceResult02, err)
+
+}
+
+// TODO: ask solana team for the data structure of return. It seems the example does not match documentation
+func (s *RPCResultTestSuite) TestParseTokenAccountsByDelegate() {
+	fmt.Println("--------TestParseTokenAccountsByDelegate--------")
+	_, err := ParseTokenAccountsByDelegate(s.TokenAccountsByDelegateResponse01)
+	assert.NoError(s.T(), err)
+
+	_, err = ParseTokenAccountsByDelegate(s.TokenAccountsByDelegateResponse02)
+	assert.NoError(s.T(), err)
 }
