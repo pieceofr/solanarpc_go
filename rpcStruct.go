@@ -199,8 +199,41 @@ type ConfirmedSignaturesForAddress2 struct {
 	BlockTime          int64  `json:"blockTime,omitempty"`
 }
 
-type TokenSupplyValue struct {
+type TokenValue struct {
 	Amount         string `json:"amount"`
 	Decimals       uint8  `json:"decimals"`
 	UiAmountString string `json:"uiAmountString"`
+}
+
+// GetTokenAccountsByDelegate
+type TokenAccountsByDelegateParamExtra struct {
+	Commitment CommitmentVal `json:"commitment,omitempty"`
+	Encoding   string        `json:"encoding"`
+	DataSlice  struct {
+		Offset uint64 `json:"offset"`
+		Length uint64 `json:"length"`
+	} `json:"dataSlice,omitempty"`
+}
+
+type TokenAccountsByDelegateParamProgramID struct {
+	ProgramID string `json:"programId"`
+}
+
+type TokenAccountsByDelegateParamMint struct {
+	Mint string `json:"mint"`
+}
+
+// TODO: Documentation does not match example, check with solana team
+type TokenAccountsByDelegateValue struct {
+	PubKey  string            `json:"pubkey"`
+	Account TokenAccountValue `json:"account"`
+}
+
+// TODO: Documentation does not match example, check with solana team
+type TokenAccountValue struct {
+	Lamports   uint64      `json:"lamports"`
+	Owner      string      `json:"owner"`
+	Executable bool        `json:"executable"`
+	RentEpoch  uint64      `json:"rentEpoch"`
+	Data       interface{} `json:"data"`
 }

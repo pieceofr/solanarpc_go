@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -370,7 +371,7 @@ func (r *RPCClient) GetConfirmedBlocksWithLimit(params *ConfirmedBlocksWithLimit
 	}
 	resp, err := r.DoPostRequest(rpcReq)
 	if err != nil {
-		log.WithFields(log.Fields{"func": "GetConfirmedBlocks"}).Error(err)
+		log.WithFields(log.Fields{"func": "GetConfirmedBlocksWithLimit"}).Error(err)
 		return nil, err
 	}
 	if resp.ID != id {
@@ -415,7 +416,63 @@ func (r *RPCClient) GetTokenSupply(base58Pubkey string, commitment *CommitmentCo
 	}
 	resp, err := r.DoPostRequest(rpcReq)
 	if err != nil {
-		log.WithFields(log.Fields{"func": "GetConfirmedSignaturesForAddress2"}).Error(err)
+		log.WithFields(log.Fields{"func": "GetTokenSupply"}).Error(err)
+		return nil, err
+	}
+	if resp.ID != id {
+		return nil, ErrIDMismatch
+	}
+	return resp, nil
+}
+
+func (r *RPCClient) GetTokenAccountBalance(base58Pubkey string, commitment *CommitmentConfig) (*RPCResponse, error) {
+	id := RandomID()
+	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getTokenAccountBalance"}
+
+	if len(base58Pubkey) == 0 {
+		return nil, ErrInvalidFuncParameter
+	}
+	rpcReq.Params = append(rpcReq.Params, base58Pubkey)
+
+	if commitment != nil && len(commitment.Commitment) > 0 {
+		rpcReq.Params = append(rpcReq.Params, *commitment)
+	}
+	resp, err := r.DoPostRequest(rpcReq)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetTokenAccountBalance"}).Error(err)
+		return nil, err
+	}
+	if resp.ID != id {
+		return nil, ErrIDMismatch
+	}
+	return resp, nil
+}
+
+// TODO: Test on a real pair of (pubKey and programId)
+func (r *RPCClient) GetTokenAccountsByDelegate(base58Pubkey string, addrOrID interface{}, extra *TokenAccountsByDelegateParamExtra) (*RPCResponse, error) {
+	id := RandomID()
+	rpcReq := RPCRequest{Version: "2.0", ID: id, Method: "getTokenAccountsByDelegate"}
+
+	if len(base58Pubkey) == 0 {
+		return nil, ErrInvalidFuncParameter
+	}
+	rpcReq.Params = append(rpcReq.Params, base58Pubkey)
+
+	typeAddrOrID := reflect.TypeOf(addrOrID).String()
+
+	switch typeAddrOrID {
+	case "solanarpc.TokenAccountsByDelegateParamMint":
+		rpcReq.Params = append(rpcReq.Params, addrOrID.(TokenAccountsByDelegateParamMint))
+	case "solanarpc.TokenAccountsByDelegateParamProgramID":
+		rpcReq.Params = append(rpcReq.Params, addrOrID.(TokenAccountsByDelegateParamProgramID))
+	}
+
+	if extra != nil {
+		rpcReq.Params = append(rpcReq.Params, *extra)
+	}
+	resp, err := r.DoPostRequest(rpcReq)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "GetTokenAccountsByDelegate"}).Error(err)
 		return nil, err
 	}
 	if resp.ID != id {

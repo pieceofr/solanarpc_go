@@ -299,3 +299,90 @@ var testResultTokenSupply01 string = `{
   },
   "id": 1
 }`
+
+var testResultTokenAccountBalance01 string = `{
+  "jsonrpc": "2.0",
+  "result": {
+      "context": {
+          "slot": 77362575
+      },
+      "value": {
+          "amount": "5065734",
+          "decimals": 9,
+          "uiAmount": 0.005065734,
+          "uiAmountString": "0.005065734"
+      }
+  },
+  "id": 1
+}`
+
+var testResultTokenAccountBalance02 string = `{
+  "jsonrpc": "2.0",
+  "error": {
+      "code": -32602,
+      "message": "Invalid param: not a v2.0 Token account"
+  },
+  "id": 1
+}`
+
+// TODO: Report to Solana Team that a , after uiAmountString make golang parse does not work
+// TODO: Ask for the Data struct of data return object
+var testResultTokenAccountsByDelegate01 string = `{
+  "jsonrpc": "2.0",
+  "result": {
+    "context": {
+      "slot": 1114
+    },
+    "value": [
+      {
+        "data": {
+          "program": "spl-token",
+          "parsed": {
+            "accountType": "account",
+            "info": {
+              "tokenAmount": {
+                "amount": "1",
+                "decimals": 1,
+                "uiAmount": 0.1,
+                "uiAmountString": "0.1"
+              },
+              "delegate": "4Nd1mBQtrMJVYVfKf2PJy9NZUZdTAsp7D4xWLs4gDB4T",
+              "delegatedAmount": 1,
+              "isInitialized": true,
+              "isNative": false,
+              "mint": "3wyAj7Rt1TWVPZVteFJPLa26JmLvdb1CAKEFZm3NY75E",
+              "owner": "CnPoSPKXu7wJqxe59Fs72tkBeALovhsCxYeFwPCQH9TD"
+            }
+          }
+        },
+        "executable": false,
+        "lamports": 1726080,
+        "owner": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "rentEpoch": 4
+      }
+    ]
+  },
+  "id": 1
+}`
+
+var testResultTokenAccountsByDelegate02 string = `{
+  "jsonrpc": "2.0",
+  "result": {
+      "context": {
+          "slot": 1114
+      },
+      "value": [
+          {
+              "data": [
+                  "11116bv5nS2h3y12kD1yUKeMZvGcKLSjQgX6BeV7u1FrjeJcKfsHRTPuR3oZ1EioKtYGiYxpxMG5vpbZLsbcBYBEmZZcMKaSoGx9JZeAuWf",
+                  "base58"
+              ],
+              "executable": false,
+              "lamports": 1726080,
+              "owner": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+              "rentEpoch": 4
+          }
+      ]
+  },
+  "id": 1
+}`

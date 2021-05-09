@@ -147,7 +147,7 @@ func ParseConfirmedSignaturesForAddress2(resp *RPCResponse) ([]ConfirmedSignatur
 	return sig, nil
 }
 
-func ParseTokenSupply(resp *RPCResponse) (*TokenSupplyValue, error) {
+func ParseTokenSupply(resp *RPCResponse) (*TokenValue, error) {
 	// check Error Code
 	if resp.Error.Code != 0 {
 		log.WithFields(log.Fields{"func": "ParseTokenSupply"}).Error(errors.New(resp.Error.Message))
@@ -159,10 +159,52 @@ func ParseTokenSupply(resp *RPCResponse) (*TokenSupplyValue, error) {
 		log.WithFields(log.Fields{"func": "ParseTokenSupply"}).Error(err)
 		return nil, err
 	}
-	value := new(TokenSupplyValue)
+	value := new(TokenValue)
 	err = json.Unmarshal(result.Value, value)
 	if err != nil {
 		log.WithFields(log.Fields{"func": "ParseTokenSupply"}).Error(err)
+		return nil, err
+	}
+	return value, nil
+}
+
+func ParseTokenAccountBalance(resp *RPCResponse) (*TokenValue, error) {
+	// check Error Code
+	if resp.Error.Code != 0 {
+		log.WithFields(log.Fields{"func": "ParseTokenAccountBalance"}).Error(errors.New(resp.Error.Message))
+		return nil, errors.New(resp.Error.Message)
+	}
+	result := new(RPCResult)
+	err := json.Unmarshal(resp.Result, result)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "ParseTokenAccountBalance"}).Error(err)
+		return nil, err
+	}
+	value := new(TokenValue)
+	err = json.Unmarshal(result.Value, value)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "ParseTokenAccountBalance"}).Error(err)
+		return nil, err
+	}
+	return value, nil
+}
+
+func ParseTokenAccountsByDelegate(resp *RPCResponse) ([]TokenAccountsByDelegateValue, error) {
+	// check Error Code
+	if resp.Error.Code != 0 {
+		log.WithFields(log.Fields{"func": "ParseTokenAccountsByDelegate"}).Error(errors.New(resp.Error.Message))
+		return nil, errors.New(resp.Error.Message)
+	}
+	result := new(RPCResult)
+	err := json.Unmarshal(resp.Result, result)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "ParseTokenAccountsByDelegate"}).Error(err)
+		return nil, err
+	}
+	value := []TokenAccountsByDelegateValue{}
+	err = json.Unmarshal(result.Value, &value)
+	if err != nil {
+		log.WithFields(log.Fields{"func": "ParseTokenAccountsByDelegate"}).Error(err)
 		return nil, err
 	}
 	return value, nil
